@@ -208,3 +208,20 @@ function argmin_ties(itr,rng::AbstractRNG=Random.GLOBAL_RNG)
         return rand(rng,mins)
     end
 end
+
+"""
+    randnMv(rng::AbstractRNG, mu::AbstractVector, Sigma::AbstractMatrix)
+
+Sample from a multivariate normal distribution with mean `mu` and covariance `Sigma`.
+> Warning: this function does not check if `Sigma` is positive semidefinite.
+"""
+function randnMv(rng::AbstractRNG, mu::AbstractVector, Sigma::AbstractMatrix)
+    # The following is a sample draw from a multivariate normal distribution that allows for a positive semidefinite covariance matrix.
+    # The MvNormal distribution in Distributions.jl requires a positive definite covariance matrix.
+    @static if VERSION >= v"1.8"
+        chol = cholesky(Sigma,RowMaximum(),check=false)
+    else
+        chol = cholesky(Sigma,Val(true),check=false)
+    end
+    return mu .+ chol.L[invperm(chol.p),1:chol.rank]*randn(rng,chol.rank)
+end

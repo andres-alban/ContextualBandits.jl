@@ -1,5 +1,6 @@
 using ContextualBandits
 using Random
+using Distributions
 using Test
 
 # Test interact function
@@ -111,4 +112,16 @@ end
     @test argmax_ties(itr,rng) == 4
     @test argmin_ties(itr,rng) in [1,6]
     @test argmin_ties(itr,rng) == 6
+end
+
+@testset "randnMv" begin
+    mu = [0.0, 0.0]
+    Sigma = [1.0 0.0; 0.0 1.0]
+    rng = MersenneTwister(1234)
+    rng2 = MersenneTwister(1234)
+    @test randnMv(rng, mu, Sigma) == rand(rng2, MvNormal(mu, Sigma))
+    Sigma = ones(2,2)
+    @test randnMv(rng, mu, Sigma) == [-0.4944787535042339, -0.4944787535042339]
+    x = randnMv(Random.GLOBAL_RNG, mu, Sigma)
+    @test x[1] == x[2]
 end

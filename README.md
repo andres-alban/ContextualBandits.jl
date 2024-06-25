@@ -1,2 +1,3 @@
-# OptLearnCov
-OPTimal LEARNing with COVariates
+# ContextualBandits
+
+Contextual bandit algorithms and simulation.
