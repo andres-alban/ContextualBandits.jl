@@ -26,11 +26,7 @@ struct LinearOutcomeLabelRandom <: OutcomeModel
 end
 
 function outcome_model_state!(outcome_model::LinearOutcomeLabelRandom,rng::AbstractRNG=Random.GLOBAL_RNG)
-    # The following is a sample draw from a multivariate normal distribution that allows for a positive semidefinite covariance matrix.
-    # The MvNormal distribution in Distributions.jl requires a positive definite covariance matrix.
-    # The constructor of LinearOutcomeLabelRandom ensures that Sigma0 is positive semidefinite.
-    chol = cholesky(outcome_model.Sigma0,RowMaximum(),check=false)
-    outcome_model.mu .= outcome_model.theta0 + chol.L[invperm(chol.p),1:chol.rank]*randn(rng,chol.rank)
+    outcome_model.mu .= randnMv(rng, outcome_model.theta0, outcome_model.Sigma0)
     return
 end
 
