@@ -1,3 +1,9 @@
+"""
+    replication_stochastic(X,X_post,Z,Wn,delay,policy,outcome_model,recorder;Xinterest=Matrix{Float64}(undef,size(X,1),0),X_post_weights=ones(size(X_post,2)),rng=Random.GLOBAL_RNG)
+
+Simulate one replication of a trial with covariates `X`, post-trial covariates `X_post`, noise `Z`, number of treatments `Wn`, delay `delay`, policy `policy`, outcome model `outcome_model`.
+This function is not intended to be called directly, but rather through [simulation_stochastic](@ref).
+"""
 function replication_stochastic(X,X_post,Z,Wn,delay,policy,outcome_model,recorder;Xinterest=Matrix{Float64}(undef,size(X,1),0),X_post_weights=ones(size(X_post,2)),rng=Random.GLOBAL_RNG)
 
     @assert size(X,1) == size(X_post,1) "X_post is not consistent with the size of X"
@@ -16,6 +22,7 @@ function replication_stochastic(X,X_post,Z,Wn,delay,policy,outcome_model,recorde
         # Allocate
         if 1 <= t <= T
             w = allocation(policy,Xcurrent,view(W,1:(t-1)),view(X,:,1:(t-1)),view(Y,1:(t-delay-1)),rng)
+            @assert w in 1:Wn "The policy made an allocation outside the range 1-$Wn"
             W[t] = w
             Y[t] = noisy_outcome(outcome_model,w,view(X,:,t),Z[t])
         end

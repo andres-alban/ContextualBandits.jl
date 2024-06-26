@@ -1,9 +1,10 @@
 """
     simulation_stochastic_internal(FX, FXtilde, Wn, T, delay, policies, outcome_model;
-    reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,
-    Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
+        reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,
+        Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
 
-Simulate trials and record metrics.
+Simulate trials and record metrics. This function is not intended to be called directly,
+but rather through [simulation_stochastic](@ref) and [simulation_stochastic_parallel](@ref).
 """
 function simulation_stochastic_internal(FX, FXtilde, Wn, T, delay, policies, outcome_model;
     reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,
@@ -53,6 +54,14 @@ function simulation_stochastic_internal(FX, FXtilde, Wn, T, delay, policies, out
     return aggregators
 end
 
+"""
+    finite_groups(FXtilde,post_reps)
+
+For a Covariates generator `FXtilde` (most likely an instance of [CovariatesIndependent](@ref) or [CovariatesCopula](@ref)),
+check if all covariates are finite and returns a flag indicating if the covariates are finite, the probability weights of each covariates value,
+and a matrix of the covariates. If the covariates are not finite or the number of possible covariates is larger than `post_reps`, 
+the weights are all equal to `1/post_reps`, and the matrix is of the right dimensions but uninitialized. 
+"""
 function finite_groups(FXtilde,post_reps)
     for i in 1:length(marginals(FXtilde))
         if !(typeof(marginals(FXtilde)[i]) <: Categorical) && !(typeof(marginals(FXtilde)[i]) <: OrdinalDiscrete)
@@ -77,6 +86,27 @@ end
         Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
 
 Simulate trials and record metrics.
+
+# Arguments
+- `FX`: Covariates generator for in-trial covariates (e.g., [CovariatesIndependent](@ref) or [CovariatesCopula](@ref)).
+- `FXtilde`: Covariates generator for post-trial covariates (e.g., [CovariatesIndependent](@ref) or [CovariatesCopula](@ref)).
+- `Wn`: Number of treatments.
+- `T`: Number of patients in the trial (sample size).
+- `delay`: Delay in observing outcomes.
+- `policies`: Dictionary of policies to simulate. The keys are the names of the policies and the values are the policies themselves.
+- `outcome_model`: the model that generates the outcomes (e.g., [LinearOutcomeLabelRandom](@ref)).
+- `reps`: Number of replications.
+- `post_reps`: Number of replications for post-trial covariates.
+- `recorder`: Recorder to store the metrics. Default is [StandardRecorder](@ref). Advanced users can create their own recorders.
+- `aggregators`: Aggregators to summarize the metrics from recorder. Default is `nothing`, 
+which means that a [StandardResultsAggregator](@ref) will be created for each policy. StandardResultsAggregator stores the mean and standard deviation of the metrics.
+- `pilot_samples_per_treatment`: Number of pilot samples per treatment to build a prior distribution before the start of the trial. Default is 0.
+- `Xinterest`: Covariates of interest for which specific . Default is an empty matrix.
+- `rng`: Random number generator. Default is `Random.GLOBAL_RNG`.
+- `verbose`: Print progress of the simulation. Default is `false`.
+
+# Returns
+A dictionary with the input arguments and the output of the simulation for each policy. The output of the simulation depends on the recorder and aggregator.
 """
 function simulation_stochastic(FX, FXtilde, Wn, T, delay, policies, outcome_model;
     reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,
@@ -108,7 +138,18 @@ end
         reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,
         Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
 
-Parallel version of [simulation_stochastic](@ref).
+Parallel version of [simulation_stochastic](@ref). The simulation is distributed among all available workers.
+
+# Example
+```julia
+using Distributed
+addprocs(2)
+@everywhere using ContextualBandits
+# ...
+# generate all the input arguments for the function
+# ...
+results = simulation_stochastic_parallel(FX, FXtilde, Wn, T, delay, policies, outcome_model)
+```
 """
 function simulation_stochastic_parallel(FX, FXtilde, Wn, T, delay, policies, outcome_model;
     reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,

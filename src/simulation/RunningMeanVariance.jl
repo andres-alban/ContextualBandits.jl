@@ -1,3 +1,11 @@
+"""
+    RunningMeanVariance()
+
+Create an object to sequantially update the sample mean and variance of a sequence of numbers
+using the [update!](@ref) function.
+
+To obtain the running statistics use `mean`, `std`, `var`, and mean_stderr (standard error of the mean).
+"""
 mutable struct RunningMeanVariance{T<:Number}
     M::T
     S::T
@@ -12,6 +20,11 @@ reset!(agg::RunningMeanVariance) = (agg.M = zero(agg.M); agg.S = zero(agg.S); ag
 # https://www.johndcook.com/blog/standard_deviation/
 # Chan, T. F., Golub, G. H., & LeVeque, R. J. (1983). Algorithms for computing the sample variance: Analysis and recommendations. The American Statistician, 37(3), 242-247
 # See equation 1.5
+"""
+    update!(agg::RunningMeanVariance,x)
+
+Update the running mean and variance with the next member of the sequnce `x`.
+"""
 function update!(agg::RunningMeanVariance,x)
     if isnan(x)
         return
@@ -27,6 +40,11 @@ function update!(agg::RunningMeanVariance,x)
     return
 end
 
+"""
+    update!(agg1::RunningMeanVariance,agg2::RunningMeanVariance)
+
+Update the running mean and variance `agg1` with the running mean and variance `agg2`.
+"""
 function update!(agg1::T,agg2::T) where T<:RunningMeanVariance
     agg1.S += agg2.S + (agg1.n * agg2.n / (agg1.n + agg2.n)) * (agg2.M - agg1.M)^2
     agg1.M += (agg2.n / (agg1.n + agg2.n)) * (agg2.M - agg1.M)
