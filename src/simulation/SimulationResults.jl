@@ -1,5 +1,15 @@
+"""
+    SimulationResultsAggregator
+
+Supertype of objects that aggregate simulation results used in [simulation_stochastic](@ref).
+"""
 abstract type SimulationResultsAggregator end
 
+"""
+    StandardResultsAggregator
+
+Aggregator for simulation results that computes the mean and standard deviation of the results.
+"""
 struct StandardResultsAggregator <: SimulationResultsAggregator
     agg
     names::Vector{String}

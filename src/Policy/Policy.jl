@@ -15,7 +15,7 @@ Initialize the state of a policy before a trial starts. `W`, `X`, and `Y` is dat
 collected in a pilot that can be used to initialize the policy. 
 `W` is the vector of treatments, `X` is the matrix of covariates, and `Y` is the vector of outcomes.
 """
-function initialize!(policy::Policy,W,X,Y)
+function initialize!(policy::Policy,W=[],X=[],Y=[])
 end
 
 """
@@ -48,4 +48,43 @@ Implement a treatment for covariates X_post given that the trial observed `W`, `
 """
 function implementation(policy::Policy,X_post,W,X,Y)
     return ones(Int,size(X_post,2))
+end
+
+function allocationIndependent(policy::Policy,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG,check=false,delay=0,Wpilot=[],Xpilot=[],Ypilot=[])
+    initialize!(policy,Wpilot,Xpilot,Ypilot)
+    for t in 1:length(Y)
+        if check
+            w = allocation(policy,Xcurrent,view(W,1:(t-1)),view(X,:,1:(t-1)),view(Y,1:(t-delay-1)),rng)
+            w == W[t] || @warn "The treatment in the data does not match the treatment allocated by the policy at time $t."
+        end
+        state_update!(policy,view(W,1:t),view(X,:,1:t),view(Y,1:t))
+    end
+    return allocation(policy,Xcurrent,W,X,Y,rng)
+end
+
+function implementationIndependent(policy::Policy,X_post,W,X,Y,Wpilot=[],Xpilot=[],Ypilot=[])
+    initialize!(policy,Wpilot,Xpilot,Ypilot)
+    for t in 1:length(Y)
+        state_update!(policy,view(W,1:t),view(X,:,1:t),view(Y,1:t))
+    end
+    return implementation(policy,X_post,W,X,Y)
+end
+
+# Some triavial policies
+
+struct RandomPolicy <: Policy
+    Wn::Int
+end
+
+function allocation(policy::RandomPolicy,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
+    return rand(rng,1:policy.Wn)
+end
+
+
+struct RoundRobinPolicy <: Policy
+    Wn::Int
+end
+
+function allocation(policy::RoundRobinPolicy,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
+    return (length(W) % policy.Wn) + 1
 end

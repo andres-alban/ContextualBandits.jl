@@ -17,7 +17,7 @@ include("OutcomeModel_tests.jl")
 println("Tests complete for OutcomeModel folder.")
 
 println("Running tests for Policy folder...")
-include("PolicyLabel_tests.jl")
+include("PolicyLinear_tests.jl")
 println("Tests complete for Policy folder.")
 
 println("Running tests for simulation folder...")

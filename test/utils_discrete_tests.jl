@@ -21,8 +21,8 @@ end
 
 @testset "X2g_prior" begin
     FX = CovariatesIndependent([Categorical([1/3,1/3,1/3]),OrdinalDiscrete([1/3,1/3,1/3])])
-    labels = ones(Bool, 16)
     Wn = 3
+    labels = ones(Bool, (Wn+1)*length(FX))
     gn = ContextualBandits.total_groups(FX)
     gs = zeros(Int, gn*Wn)
     ws = zeros(Int, gn*Wn)
@@ -33,23 +33,27 @@ end
     @test ws == vcat(ones(Int,gn),2*ones(Int,gn),3*ones(Int,gn))
     @test gs == repeat(1:9,3)
 
-    theta0 = rand((Wn+1)*length(FX))
-    Sigma0 = rand(16,16)
+    len = (Wn+1)*length(FX)
+    theta0 = rand(len)
+    Sigma0 = rand(len,len)
     Sigma0 = Sigma0 * Sigma0'
     theta0_disc, Sigma0_disc = ContextualBandits.X2g_prior(theta0,Sigma0,FX,labels,Wn)
+    theta_expect = similar(theta0_disc)
+    Sigma_expect = similar(Sigma0_disc)
     for i in eachindex(theta0_disc)
         w = ContextualBandits.index2treatment(i,gn)
         g = ContextualBandits.index2g(i,gn)
         X = ContextualBandits.g2X(g,FX)
-        @test theta0_disc[i] ≈ interact(w,Wn,X,labels)' * theta0
-        @test Sigma0_disc[i,i] ≈ interact(w,Wn,X,labels)' * Sigma0 * interact(w,Wn,X,labels)
+        theta_expect[i] = interact(w,Wn,X,labels)' * theta0
         for j in eachindex(theta0_disc)
             wj = ContextualBandits.index2treatment(j,gn)
             gj = ContextualBandits.index2g(j,gn)
             Xj = ContextualBandits.g2X(gj,FX)
-            @test Sigma0_disc[i,j] ≈ interact(w,Wn,X,labels)' * Sigma0 * interact(wj,Wn,Xj,labels)
+            Sigma_expect[i,j] = interact(w,Wn,X,labels)' * Sigma0 * interact(wj,Wn,Xj,labels)
         end
     end
+    @test theta0_disc ≈ theta_expect
+    @test Sigma0_disc ≈ Sigma_expect
 end
 
 @testset "X2g_probs" begin

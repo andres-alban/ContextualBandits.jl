@@ -1,5 +1,23 @@
+"""
+    SimulationRecorder
+
+Abstract type for simulation recorders used in [simulation_stochastic](@ref).
+"""
 abstract type SimulationRecorder end
 
+
+"""
+    StandardRecorder
+
+Default recorder used in [simulation_stochastic](@ref).
+It records the Expected Opportunity Cost (EOC) and the Probability of Incorrect Selection (PICS) for each time step.
+`EOC_on` and `PICS_on` refer to losses during the trial (online reward losses), 
+while `EOC_off` and `PICS_off` refer to losses post-trial (offline rewards).
+
+XEOC_on, XPICS_on, XEOC_off, and XPICS_off are the same as EOC_on, PICS_on, EOC_off, PICS_off but for patients with the covariates of interest.
+
+Some additional metrics are also recorded, such as the fraction of patients treated with each treatment, the cumulative EOC and PICS, and the fraction of patients with each covariate of interest treated with each treatment.
+"""
 mutable struct StandardRecorder <: SimulationRecorder
     EOC_on::Vector{Float64}
     cumulEOC_on::Vector{Float64}
