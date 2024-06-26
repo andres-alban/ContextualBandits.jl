@@ -28,9 +28,9 @@ end
     theta0 = zeros(sum(labels))
     Sigma0 = Diagonal(ones(sum(labels)))
     sample_std = 1.0
-    policy = RandomPolicyLabel(Wn, labels, sample_std, theta0, Sigma0)
+    policy = RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labels)
     ContextualBandits.initialize!(policy, [],[],[])
-    outcome_model = LinearOutcomeLabelRandom(Wn, m, labels, theta0, Sigma0, sample_std)
+    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labels)
     ContextualBandits.outcome_model_state!(outcome_model)
     Xinterest = X[:,3:4]
     X_post_weights = ones(4)./4
@@ -75,10 +75,10 @@ end
     theta0 = zeros(sum(labels))
     Sigma0 = Diagonal(ones(sum(labels)))
     sample_std = 1.0
-    policy = RandomPolicyLabel(Wn, labels, sample_std, theta0, Sigma0)
-    policy2 = GreedyPolicyLabel(Wn, labels, sample_std, theta0, Sigma0)
+    policy = RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labels)
+    policy2 = GreedyPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labels)
     policies = [policy, policy2]
-    outcome_model = LinearOutcomeLabelRandom(Wn, m, labels, theta0, Sigma0, sample_std)
+    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labels)
     reps = 10
     post_reps = 10
     pilot_samples_per_treatment = 0
@@ -122,10 +122,10 @@ end
     theta0 = zeros(sum(labels))
     Sigma0 = Diagonal(ones(sum(labels)))
     sample_std = 1.0
-    policy = RandomPolicyLabel(Wn, labels, sample_std, theta0, Sigma0)
-    policy2 = GreedyPolicyLabel(Wn, labels, sample_std, theta0, Sigma0)
+    policy = RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labels)
+    policy2 = GreedyPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labels)
     policies = Dict("random" => policy, "greedy" => policy2)
-    outcome_model = LinearOutcomeLabelRandom(Wn, m, labels, theta0, Sigma0, sample_std)
+    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labels)
     reps = 10
     post_reps = 10
     pilot_samples_per_treatment = 0
@@ -173,10 +173,10 @@ end
     theta0 = zeros(sum(labels))
     Sigma0 = Diagonal(ones(sum(labels)))
     sample_std = 1.0
-    policy = RandomPolicyLabel(Wn, labels, sample_std, theta0, Sigma0)
-    policy2 = GreedyPolicyLabel(Wn, labels, sample_std, theta0, Sigma0)
+    policy = RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labels)
+    policy2 = GreedyPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labels)
     policies = Dict("random" => policy, "greedy" => policy2)
-    outcome_model = LinearOutcomeLabelRandom(Wn, m, labels, theta0, Sigma0, sample_std)
+    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labels)
     reps = 100
     post_reps = 10
     pilot_samples_per_treatment = 0

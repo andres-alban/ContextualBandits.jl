@@ -17,13 +17,13 @@ include("utils_discrete.jl")
 
 include("OutcomeModel/OutcomeModel.jl")
 export OutcomeModel
-include("OutcomeModel/OutcomeLabel.jl")
-export LinearOutcomeLabelRandom, LinearOutcomeLabelFixed
+include("OutcomeModel/OutcomeLinear.jl")
+export OutcomeLinearBayes, OutcomeLinearFixed
 
 include("Policy/Policy.jl")
 export Policy
-include("policy/PolicyLabel.jl")
-export PolicyLabel, RandomPolicyLabel, GreedyPolicyLabel
+include("policy/PolicyLinear.jl")
+export PolicyLinear, RandomPolicyLinear, GreedyPolicyLinear
 
 include("simulation/replication_stochastic.jl")
 include("simulation/simulation_stochastic.jl")
