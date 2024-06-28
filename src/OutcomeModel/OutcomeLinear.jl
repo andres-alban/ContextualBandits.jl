@@ -1,11 +1,11 @@
 """
-    struct OutcomeLinearBayes <: OutcomeModel
+    OutcomeLinearBayes <: OutcomeModel
     OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(Wn*m)))
 
 Linear outcome model with coefficients randomly drawn from a normal prior distribution
 with mean vector `theta0` and covariance matrix `Sigma0`.
 `Wn` is the number of treatments, `m` is the number of covariates, including the intercept term.
-The first `m` coefficients represent prognostic effects (effects independent of the treatment) 
+The first `m` coefficients represent prognostic effects (effects independent of the treatment)
 for each of the `m` covariates.
 The following `m` coefficients represent the predictive effects of treatment 1
 (interaction between treatment and covariates).
@@ -13,7 +13,7 @@ In total, there are at most `(Wn+1)*m` coefficients.
 `labeling` is a boolean vector of length `(Wn+1)*m` indicationg active coefficients. If any coefficient
 is knwon to be zero (inactive), the corresponding entry of `labeling` should be `false`.
 The length of `theta0` and the dimensions of `Sigma0` should be equal to the number of active coefficients=`sum(labeling)`.
-By default, all predictive coefficients are active.
+By default, only predictive coefficients are active.
 
 Outcomes are observed with white noise around the mean with sample standard deviation `sample_std`.
 """
@@ -57,12 +57,12 @@ end
 ###############################################################################
 
 """
-    struct OutcomeLinearFixed <: OutcomeModel
+    OutcomeLinearFixed <: OutcomeModel
     OutcomeLinearFixed(Wn, m, mu, sample_std, labeling=vcat(falses(m),trues(Wn*m)))
 
 Linear outcome model with fixed coefficients `mu`.
 `Wn` is the number of treatments, `m` is the number of covariates, including the intercept term.
-The first `m` coefficients represent prognostic effects (effects independent of the treatment) 
+The first `m` coefficients represent prognostic effects (effects independent of the treatment)
 for each of the `m` covariates.
 The following `m` coefficients represent the predictive effects of treatment 1
 (interaction between treatment and covariates).
@@ -70,7 +70,7 @@ In total, there are at most `(Wn+1)*m` coefficients.
 `labeling` is a boolean vector of length `(Wn+1)*m` indicationg active coefficients. If any coefficient
 is knwon to be zero (inactive), the corresponding entry of `labeling` should be `false`.
 The length of `mu` should be equal to the number of active coefficients=`sum(labeling)`.
-By default, all predictive coefficients are active.
+By default, only predictive coefficients are active.
 
 Outcomes are observed with white noise around the mean with sample standard deviation `sample_std`.
 """

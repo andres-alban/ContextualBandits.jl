@@ -38,8 +38,8 @@ mutable struct StandardRecorder <: SimulationRecorder
     XPICS_off::Matrix{Float64}
     XWfrac_off::Array{Float64,3}
 
-    labelsfrac::Vector{Float64}
-    Nactivelabels::Vector{Float64}
+    labeling_frac::Vector{Float64}
+    sum_labeling::Vector{Float64}
     # helper variables
     T::Int
     Wn::Int
@@ -78,8 +78,8 @@ function initialize!(sr::StandardRecorder, T, Wn, m, delay, n_post, X_post_weigh
     sr.XPICS_off = Matrix{Float64}(undef,T+1,n_interest)
     sr.XWfrac_off = Array{Float64,3}(undef,T+1,Wn,n_interest)
 
-    sr.labelsfrac = Vector{Float64}(undef,(Wn+1)*m)
-    sr.Nactivelabels = Vector{Float64}(undef,T+1)
+    sr.labeling_frac = Vector{Float64}(undef,(Wn+1)*m)
+    sr.sum_labeling = Vector{Float64}(undef,T+1)
 
     sr.max_mean_outcome_post = Vector{Float64}(undef,n_post)
     sr.Xmax_mean_outcome_post = Vector{Float64}(undef,n_interest)
@@ -159,12 +159,12 @@ function record!(sr::StandardRecorder,t,outcome_model,policy,Wcurrent,Xcurrent,X
             sr.XWfrac_off[t+1,Xtreat_post[k],k] = 1
         end
 
-        # compute the number of active labels
-        sr.Nactivelabels[t+1] = try sum(policy_labeling(policy)) catch; 0 end
+        # compute the number of active terms in labeling
+        sr.sum_labeling[t+1] = try sum(policy_labeling(policy)) catch; 0 end
     end
 
     if t == sr.T+sr.delay
-        sr.labelsfrac .= try policy_labeling(policy) catch; 0 end
+        sr.labeling_frac .= try policy_labeling(policy) catch; 0 end
     end
 
     return sr
@@ -191,8 +191,8 @@ function output_recorder(sr::StandardRecorder)
         sr.XPICS_off,
         sr.XWfrac_off,
 
-        sr.labelsfrac,
-        sr.Nactivelabels
+        sr.labeling_frac,
+        sr.sum_labeling
     )
 end
 
@@ -217,7 +217,7 @@ function output_recorder_names(sr::StandardRecorder)
         "XPICS_off",
         "XWfrac_off",
 
-        "labelsfrac",
-        "Nactivelabels"
+        "labeling_frac",
+        "sum_labeling"
     ]
 end

@@ -1,11 +1,12 @@
 """
-    abstract type PolicyLinear <: Policy
+    PolicyLinear <: Policy
 
-An abstract type that updates using the model with a labeling and implements the treatments strategy that maximizes expected outcomes.
+Abstract supertype that updates using the model with a labeling and implements the treatments strategy that maximizes expected outcomes.
 It does not provide an allocation policy, which should be defined for each subtype.
 
 All subtypes must include the following fields:
 - `Wn` (number of treatments)
+- `m` (number of covariates, including the intercept term)
 - `theta0` (prior mean vector)
 - `Sigma0` (prior covariance matrix)
 - `theta_t` (posterior mean vector)
@@ -21,7 +22,7 @@ function initialize!(policy::PolicyLinear,W=[],X=[],Y=[])
     else # pilot data to build the prior
         WX = interact(W, policy.Wn, X, policy.labeling)
         policy.theta_t, policy.Sigma_t = BayesUpdateNormal(policy.theta0, policy.Sigma0, WX, Y, policy.sample_std)
-        robustify_prior!(policy.theta_t, policy.Sigma_t, policy.Wn, policy.labeling)
+        robustify_prior_linear!(policy.theta_t, policy.Sigma_t, policy.Wn, policy.m, policy.labeling)
     end
     return
 end
@@ -70,6 +71,7 @@ Use a linear model (with `labeling`) to make an implementation.
 """
 mutable struct RandomPolicyLinear <: PolicyLinear
     Wn::Int
+    m::Int
     theta0::Vector{Float64}
     Sigma0::Array{Float64,2}
     sample_std::Float64
@@ -78,7 +80,7 @@ mutable struct RandomPolicyLinear <: PolicyLinear
     Sigma_t::Matrix{Float64}
     function RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(Wn*m)))
         checkInputPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling)
-        new(Wn, copy(theta0), copy(Sigma0), sample_std, copy(labeling), similar(theta0), similar(Sigma0))
+        new(Wn, m, copy(theta0), copy(Sigma0), sample_std, copy(labeling), similar(theta0), similar(Sigma0))
     end
 end
 
@@ -95,6 +97,7 @@ a linear model (with `labeling`).
 """
 mutable struct GreedyPolicyLinear <: PolicyLinear
     Wn::Int
+    m:: Int
     theta0::Vector{Float64}
     Sigma0::Matrix{Float64}
     sample_std::Float64
@@ -103,7 +106,7 @@ mutable struct GreedyPolicyLinear <: PolicyLinear
     Sigma_t::Matrix{Float64}
     function GreedyPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(Wn*m)))
         checkInputPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling)
-        new(Wn, copy(theta0), copy(Sigma0), sample_std, copy(labeling), similar(theta0), similar(Sigma0))
+        new(Wn, m, copy(theta0), copy(Sigma0), sample_std, copy(labeling), similar(theta0), similar(Sigma0))
     end
 end
 
