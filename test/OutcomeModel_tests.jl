@@ -6,10 +6,10 @@ using Test
 @testset "OutcomeLinearFixed" begin
     Wn = 2
     m = 3
-    labels = [true, false, false, true, true, false, true, false, true]
+    labeling = [true, false, false, true, true, false, true, false, true]
     sample_std = 1.0
     mu = [1.0, 2.0, -1.0, -1.0, 2.0]
-    outcome_model = OutcomeLinearFixed(Wn, m, mu, sample_std, labels)
+    outcome_model = OutcomeLinearFixed(Wn, m, mu, sample_std, labeling)
     rng = MersenneTwister(1234)
     ContextualBandits.outcome_model_state!(outcome_model,rng)
     X = [1.0, 2.0, 5.0]
@@ -23,11 +23,11 @@ end
 @testset "OutcomeLinearBayes" begin
     Wn = 2
     m = 3
-    labels = [true, false, false, true, true, false, true, false, true]
-    theta0 = zeros(sum(labels))
-    Sigma0 = Diagonal(ones(sum(labels)))
+    labeling = [true, false, false, true, true, false, true, false, true]
+    theta0 = zeros(sum(labeling))
+    Sigma0 = Diagonal(ones(sum(labeling)))
     sample_std = 1.0
-    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labels)
+    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labeling)
     rng = MersenneTwister(1234)
     ContextualBandits.outcome_model_state!(outcome_model,rng)
     @test outcome_model.mu == [0.8673472019512456, -0.9017438158568171, -0.4944787535042339, -0.9029142938652416, 0.8644013132535154]
@@ -42,11 +42,11 @@ end
 @testset "OutcomeLinearBayes semidefinite covariance matrix" begin
     Wn = 2
     m = 3
-    labels = [true, false, false, true, true, false, true, false, true]
-    theta0 = zeros(sum(labels))
-    Sigma0 = ones(sum(labels),sum(labels))
+    labeling = [true, false, false, true, true, false, true, false, true]
+    theta0 = zeros(sum(labeling))
+    Sigma0 = ones(sum(labeling),sum(labeling))
     sample_std = 1.0
-    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labels)
+    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labeling)
     rng = MersenneTwister(1234)
     ContextualBandits.outcome_model_state!(outcome_model,rng)
     @test outcome_model.mu ==  [0.8673472019512456, 0.8673472019512456, 0.8673472019512456, 0.8673472019512456, 0.8673472019512456]

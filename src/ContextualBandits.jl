@@ -24,6 +24,15 @@ include("Policy/Policy.jl")
 export Policy
 include("Policy/PolicyLinear.jl")
 export PolicyLinear, RandomPolicyLinear, GreedyPolicyLinear
+include("Policy/robust_prior_linear.jl")
+export robustify_prior_linear!, default_prior_linear
+include("Policy/PolicyLinearDiscrete.jl")
+export PolicyLinearDiscrete
+include("Policy/KG.jl")
+export cKG, iKG
+include("Policy/fEVI.jl")
+export fEVI, fEVIDiscrete, fEVIDiscreteOnOff
+
 
 include("simulation/replication_stochastic.jl")
 include("simulation/simulation_stochastic.jl")

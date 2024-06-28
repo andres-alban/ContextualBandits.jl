@@ -82,8 +82,7 @@ end
 
 """
     simulation_stochastic(FX, FXtilde, Wn, T, delay, policies, outcome_model;
-        reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,
-        Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
+        reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0, Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
 
 Simulate trials and record metrics.
 
@@ -135,8 +134,7 @@ end
 
 """
     simulation_stochastic_parallel(FX, FXtilde, Wn, T, delay, policies, outcome_model;
-        reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,
-        Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
+        reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0, Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
 
 Parallel version of [simulation_stochastic](@ref). The simulation is distributed among all available workers.
 

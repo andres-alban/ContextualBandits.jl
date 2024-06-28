@@ -24,13 +24,13 @@ end
     X_post = rand(m, 4)
     Z = rand(T)
     delay = 0
-    labels = ones(Bool, (Wn+1)*m)
-    theta0 = zeros(sum(labels))
-    Sigma0 = Diagonal(ones(sum(labels)))
+    labeling = ones(Bool, (Wn+1)*m)
+    theta0 = zeros(sum(labeling))
+    Sigma0 = Diagonal(ones(sum(labeling)))
     sample_std = 1.0
-    policy = RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labels)
+    policy = RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling)
     ContextualBandits.initialize!(policy, [],[],[])
-    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labels)
+    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labeling)
     ContextualBandits.outcome_model_state!(outcome_model)
     Xinterest = X[:,3:4]
     X_post_weights = ones(4)./4
@@ -60,8 +60,8 @@ end
     @test all(x[findfirst(names .== "XPICS_off")][x[findfirst(names .== "XEOC_off")] .== 0.0] .== 0)
     @test all(x[findfirst(names .== "XWfrac_off")] .∈ Ref([0,1]))
     @test all(sum(x[findfirst(names .== "XWfrac_off")],dims=2) .== 1)
-    @test all(x[findfirst(names .== "labelsfrac")] .== labels)
-    @test all(x[findfirst(names .== "Nactivelabels")] .== sum(labels))
+    @test all(x[findfirst(names .== "labeling_frac")] .== labeling)
+    @test all(x[findfirst(names .== "sum_labeling")] .== sum(labeling))
 end
 
 @testset "simulation_stochastic_internal" begin
@@ -71,14 +71,14 @@ end
     m = length(FX)
     T = 10
     delay = 0
-    labels = ones(Bool, (Wn+1)*m)
-    theta0 = zeros(sum(labels))
-    Sigma0 = Diagonal(ones(sum(labels)))
+    labeling = ones(Bool, (Wn+1)*m)
+    theta0 = zeros(sum(labeling))
+    Sigma0 = Diagonal(ones(sum(labeling)))
     sample_std = 1.0
-    policy = RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labels)
-    policy2 = GreedyPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labels)
+    policy = RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling)
+    policy2 = GreedyPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling)
     policies = [policy, policy2]
-    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labels)
+    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labeling)
     reps = 10
     post_reps = 10
     pilot_samples_per_treatment = 0
@@ -107,8 +107,8 @@ end
     @test all(y["XPICS_off"]["mean"][y["XEOC_off"]["mean"] .== 0.0] .== 0)
     @test all(0 .<= y["XWfrac_off"]["mean"] .<= 1)
     @test all(sum(y["XWfrac_off"]["mean"],dims=2) .≈ 1)
-    @test all(y["labelsfrac"]["mean"] .== labels)
-    @test all(y["Nactivelabels"]["mean"] .== sum(labels))
+    @test all(y["labeling_frac"]["mean"] .== labeling)
+    @test all(y["sum_labeling"]["mean"] .== sum(labeling))
 end
 
 @testset "simulation_stochastic" begin
@@ -118,14 +118,14 @@ end
     m = length(FX)
     T = 10
     delay = 0
-    labels = ones(Bool, (Wn+1)*m)
-    theta0 = zeros(sum(labels))
-    Sigma0 = Diagonal(ones(sum(labels)))
+    labeling = ones(Bool, (Wn+1)*m)
+    theta0 = zeros(sum(labeling))
+    Sigma0 = Diagonal(ones(sum(labeling)))
     sample_std = 1.0
-    policy = RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labels)
-    policy2 = GreedyPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labels)
+    policy = RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling)
+    policy2 = GreedyPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling)
     policies = Dict("random" => policy, "greedy" => policy2)
-    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labels)
+    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labeling)
     reps = 10
     post_reps = 10
     pilot_samples_per_treatment = 0
@@ -154,8 +154,8 @@ end
     @test all(y["XPICS_off"]["mean"][y["XEOC_off"]["mean"] .== 0.0] .== 0)
     @test all(0 .<= y["XWfrac_off"]["mean"] .<= 1)
     @test all(sum(y["XWfrac_off"]["mean"],dims=2) .≈ 1)
-    @test all(y["labelsfrac"]["mean"] .== labels)
-    @test all(y["Nactivelabels"]["mean"] .== sum(labels))
+    @test all(y["labeling_frac"]["mean"] .== labeling)
+    @test all(y["sum_labeling"]["mean"] .== sum(labeling))
 end
 
 @testset "simulation_stochastic_parallel" begin
@@ -169,14 +169,14 @@ end
     m = length(FX)
     T = 10
     delay = 0
-    labels = ones(Bool, (Wn+1)*m)
-    theta0 = zeros(sum(labels))
-    Sigma0 = Diagonal(ones(sum(labels)))
+    labeling = ones(Bool, (Wn+1)*m)
+    theta0 = zeros(sum(labeling))
+    Sigma0 = Diagonal(ones(sum(labeling)))
     sample_std = 1.0
-    policy = RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labels)
-    policy2 = GreedyPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labels)
+    policy = RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling)
+    policy2 = GreedyPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling)
     policies = Dict("random" => policy, "greedy" => policy2)
-    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labels)
+    outcome_model = OutcomeLinearBayes(Wn, m, theta0, Sigma0, sample_std, labeling)
     reps = 100
     post_reps = 10
     pilot_samples_per_treatment = 0
@@ -205,6 +205,6 @@ end
     @test all(y["XPICS_off"]["mean"][y["XEOC_off"]["mean"] .== 0.0] .== 0)
     @test all(0 .<= y["XWfrac_off"]["mean"] .<= 1)
     @test all(sum(y["XWfrac_off"]["mean"],dims=2) .≈ 1)
-    @test all(y["labelsfrac"]["mean"] .== labels)
-    @test all(y["Nactivelabels"]["mean"] .== sum(labels))
+    @test all(y["labeling_frac"]["mean"] .== labeling)
+    @test all(y["sum_labeling"]["mean"] .== sum(labeling))
 end

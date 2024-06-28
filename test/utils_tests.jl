@@ -8,24 +8,21 @@ using Test
     w = [1, 2]
     Wn = 2
     x = [1 1; 2 3; 5 4]
-    labels = Bool.([1, 1, 0, 0, 0, 1, 0, 1, 0])
+    labeling = Bool.([1, 1, 0, 0, 0, 1, 0, 1, 0])
     expected_output = [1.0 1.0; 2.0 3.0; 5.0 0.0; 0.0 3.0]
-    @test interact(w, Wn, x, labels) == expected_output
+    @test interact(w, Wn, x, labeling) == expected_output
 
     w = w[1]
     x = x[:,1]
     expected_output = [1.0, 2.0, 5.0, 0.0]
-    @test interact(w, Wn, x, labels) == expected_output
+    @test interact(w, Wn, x, labeling) == expected_output
 
-    # Test interact with default labels
+    # Test interact with default labeling
     w = [1, 2]
     Wn = 2
     x = [1 1; 2 3; 5 4]
     expected_output = 
-       [1.0 1.0; 
-        2.0 3.0;
-        5.0 4.0;
-        1.0 0.0; 
+       [1.0 0.0; 
         2.0 0.0;
         5.0 0.0;
         0.0 1.0; 
@@ -33,7 +30,7 @@ using Test
         0.0 4.0]
     @test interact(w, Wn, x) == expected_output
 
-    WX = Matrix{Float64}(undef, 9, 2)
+    WX = Matrix{Float64}(undef, 6, 2)
     interact!(WX, w, Wn, x)
     @test WX == expected_output
 
@@ -71,33 +68,6 @@ end
     expected_theta = [0.25850340136054417, 0.23129251700680276]
     expected_Sigma = [0.7414965986394558 -0.23129251700680276; -0.23129251700680276 0.10884353741496602]
     @test BayesUpdateNormal(theta, Sigma, X, y, sample_std) == (expected_theta, expected_Sigma)
-
-    theta = [0.0, 0.0]
-    Sigma = [1.0 0.0; 0.0 1.0]
-    g = 1
-    y = 1.0
-    sample_std = 1.0
-    expected_theta = [0.5, 0.0]
-    expected_Sigma = [0.5 0.0; 0.0 1.0]
-    @test BayesUpdateNormal(theta, Sigma, g, y, sample_std) == (expected_theta, expected_Sigma)
-
-    theta = [0.0, 0.0]
-    Sigma = [1.0 0.0; 0.0 1.0]
-    g = [1,2]
-    y = [1.0,2.0]
-    sample_std = 1.0
-    expected_theta = [0.5, 1.0]
-    expected_Sigma = [0.5 0.0; 0.0 0.5]
-    @test BayesUpdateNormal(theta, Sigma, g, y, sample_std) == (expected_theta, expected_Sigma)
-
-    theta = [0.0, 0.0]
-    Sigma = [1.0 0.0; 0.0 1.0]
-    g = [1,2]
-    y = [1.0,2.0]
-    sample_std = [1.0,2.0]
-    expected_theta = [0.5, 0.4]
-    expected_Sigma = [0.5 0.0; 0.0 0.8]
-    @test BayesUpdateNormal(theta, Sigma, g, y, sample_std) == (expected_theta, expected_Sigma)
 end
 
 # Test argmax_ties function

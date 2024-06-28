@@ -3,7 +3,9 @@
 """
     X2g(X,FX)
 
-Converts a design vector `X` with only Discrete covariates into a group `g`, where `g` is a unique integer assigned to each combination of the covariate values. The reverse conversion can be achieved with [`g2X`](@ref).
+Converts a design vector `X` with only discrete covariates into a group `g`,
+where `g` is a unique integer assigned to each combination of the covariate values.
+The reverse conversion can be achieved with [`g2X`](@ref).
 """
 function X2g(X,FX)
     # Assumes FX has an intercept and reduce_category
@@ -37,7 +39,9 @@ end
 """
     g2X(g,FX)
 
-Converts a group `g` into a covariate value `X`, where `g` is a unique integer assigned to each combination of the covariate values. The reverse conversion can be achieved with [`X2g`](@ref).
+Converts a group `g` into a design vector `X`, where `g` is a unique integer
+assigned to each combination of the covariate values. The reverse conversion can
+be achieved with [`X2g`](@ref).
 """
 function g2X(g,FX)
     # Assumes FX has an intercept and reduce_category
@@ -79,12 +83,16 @@ function index2g(i,gn)
     return ((i-1) % gn) + 1
 end
 
+function treatment_g2index(w,g,gn)
+    return (w-1)*gn + g
+end
+
 """
-    X2g_prior(theta0,Sigma0,FX,labels,Wn)
+    X2g_prior(theta0,Sigma0,FX,labeling,Wn)
 
 Transform the prior for covariate values to the prior for groups.
 """
-function X2g_prior(theta0,Sigma0,FX,labels,Wn)
+function X2g_prior(theta0,Sigma0,FX,labeling,Wn)
     gn = total_groups(FX)
     Xs = Matrix{Float64}(undef,length(FX),gn)
     for g in 1:gn
@@ -95,7 +103,7 @@ function X2g_prior(theta0,Sigma0,FX,labels,Wn)
     for i in 1:combs
         w = index2treatment(i,gn)
         g = index2g(i,gn)
-        theta0_disc[i] = interact(w,Wn,view(Xs,:,g),labels)' * theta0
+        theta0_disc[i] = interact(w,Wn,view(Xs,:,g),labeling)' * theta0
     end
 
     Sigma0_disc = zeros(combs,combs)
@@ -105,7 +113,7 @@ function X2g_prior(theta0,Sigma0,FX,labels,Wn)
         for j in 1:i
             wj = index2treatment(j,gn)
             gj = index2g(j,gn)
-            Sigma0_disc[i,j] = interact(wi,Wn,view(Xs,:,gi),labels)' * Sigma0 * interact(wj,Wn,view(Xs,:,gj),labels)
+            Sigma0_disc[i,j] = interact(wi,Wn,view(Xs,:,gi),labeling)' * Sigma0 * interact(wj,Wn,view(Xs,:,gj),labeling)
             Sigma0_disc[j,i] = Sigma0_disc[i,j]
         end
     end
@@ -149,4 +157,45 @@ function X2g_probs(FX::CovariatesCopula)
     end
     p_disc ./= reps
     return p_disc
+end
+
+"""
+    BayesUpdateNormalDiscrete(theta,Sigma,g,y,sample_std)
+
+Same as [BayesUpdateNormal](@ref) but for discrete models, where each entry of
+`theta` corresponds to an alternative and `g` is the sampled alternative.
+
+```julia
+X=zeros(length(theta))
+X[g] = 1
+BayesUpdateNormal(theta,Sigma,X,y,sample_std) == BayesUpdateNormalDiscrete(theta,Sigma,g,y,sample_std)
+```
+"""
+function BayesUpdateNormalDiscrete(theta,Sigma,g,y,sample_std)
+    BayesUpdateNormalDiscrete!(copy(theta),copy(Sigma),g,y,sample_std)
+end
+
+"""
+    BayesUpdateNormalDiscrete!(theta,Sigma,g,y,sample_std)
+
+In-place version of [BayesUpdateNormalDiscrete](@ref).
+"""
+function BayesUpdateNormalDiscrete!(theta, Sigma, g, y, sample_std)
+    theta .= theta .+ (y .- theta[g])./(sample_std^2 .+ Sigma[g,g]) .* Sigma[:,g]
+    Sigma .= Sigma - (Sigma[:,g] * Sigma[:,g]') ./ (sample_std^2 .+ Sigma[g,g])
+    return theta,Sigma
+end
+
+function BayesUpdateNormalDiscrete!(theta, Sigma, g, y::AbstractVector, sample_std)
+    for i in eachindex(y)
+        BayesUpdateNormalDiscrete!(theta,Sigma,g[i],y[i],sample_std)
+    end
+    return theta,Sigma
+end
+
+function BayesUpdateNormalDiscrete!(theta, Sigma, g, y::AbstractVector, sample_std::AbstractVector)
+    for i in eachindex(y)
+        BayesUpdateNormalDiscrete!(theta,Sigma,g[i],y[i],sample_std[i])
+    end
+    return theta,Sigma
 end
