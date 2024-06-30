@@ -21,6 +21,7 @@ include("PolicyLinear_tests.jl")
 include("robust_prior_linear_tests.jl")
 include("KG_tests.jl")
 include("fEVI_tests.jl")
+include("fEVI_MC_tests.jl")
 println("Tests complete for Policy folder.")
 
 println("Running tests for simulation folder...")

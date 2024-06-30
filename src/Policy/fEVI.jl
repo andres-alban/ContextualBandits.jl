@@ -37,7 +37,7 @@ end
 
 
 """
-    fEVI(gt, Wn, gn, p, theta, Sigma, sample_std)
+    fEVI(Wn, gn, theta, Sigma, sample_std, gt, p)
 
 Compute the fEVI values for each treatment.
 This function implements Algorithm 1 of 
@@ -67,27 +67,16 @@ end
 Allocate treatment using the fEVI allocation policy and update based on the linear model with labeling to make an implementation.
 """
 mutable struct fEVIDiscrete <: PolicyLinearDiscrete
-    Wn::Int
-    m::Int
-    theta0::Vector{Float64}
-    Sigma0::Matrix{Float64}
-    sample_std::Float64
-    labeling::BitVector
-    FX::Union{CovariatesIndependent,CovariatesCopula}
-    gn::Int
-    p::Vector{Float64}
-    theta_t::Vector{Float64}
-    Sigma_t::Matrix{Float64}
-    function fEVIDiscrete(Wn, m, theta0, Sigma0, sample_std, FX, labeling=vcat(falses(m),trues(Wn*m)))
-        checkInputPolicyLinearDiscrete(Wn, m, theta0, Sigma0, sample_std, labeling, FX)
-        gn = total_groups(FX)
-        new(Wn, m, copy(theta0), copy(Sigma0), sample_std, copy(labeling), FX, gn, X2g_probs(FX), zeros(Wn*gn), zeros(Wn*gn,Wn*gn))
-    end
+    model::BayesLinearRegressionDiscrete
+end
+
+function fEVIDiscrete(Wn, m, theta0, Sigma0, sample_std, FX, labeling=vcat(falses(m),trues(Wn*m)))
+    fEVIDiscrete(BayesLinearRegressionDiscrete(Wn, m, theta0, Sigma0, sample_std, FX, labeling))
 end
 
 function allocation(policy::fEVIDiscrete,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
-    g = X2g(Xcurrent, policy.FX)
-    return argmax_ties(fEVI(policy.Wn, policy.gn, policy.theta_t, policy.Sigma_t, policy.sample_std, g, policy.p), rng)
+    g = X2g(Xcurrent, policy.model.FX)
+    return argmax_ties(fEVI(policy.model.Wn, policy.model.gn, policy.model.theta_t, policy.model.Sigma_t, policy.model.sample_std, g, policy.model.p), rng)
 end
 
 """
@@ -98,33 +87,23 @@ Allocate treatment using the fEVI allocation policy (with online and offline rew
 and update based on linear model with labeling to make an implementation.
 """
 mutable struct fEVIDiscreteOnOff <: PolicyLinearDiscrete
-    Wn::Int
-    m::Int
-    theta0::Vector{Float64}
-    Sigma0::Matrix{Float64}
-    sample_std::Float64
-    labeling::BitVector
-    FX::Union{CovariatesIndependent,CovariatesCopula}
-    gn::Int
-    p::Vector{Float64}
+    model::BayesLinearRegressionDiscrete
     P::Float64
     T::Int
-    theta_t::Vector{Float64}
-    Sigma_t::Matrix{Float64}
-    function fEVIDiscreteOnOff(Wn, m, theta0, Sigma0, sample_std, FX, P, T, labeling=vcat(falses(m),trues(Wn*m)))
-        checkInputPolicyLinearDiscrete(Wn, m, theta0, Sigma0, sample_std, labeling, FX)
-        gn = total_groups(FX)
-        new(Wn, m, copy(theta0), copy(Sigma0), sample_std, copy(labeling), FX, gn, X2g_probs(FX), P, T, similar(theta0), similar(Sigma0))
-    end
+end
+
+
+function fEVIDiscreteOnOff(Wn, m, theta0, Sigma0, sample_std, FX, P, T, labeling=vcat(falses(m),trues(Wn*m)))
+    fEVIDiscreteOnOff(BayesLinearRegressionDiscrete(Wn, m, theta0, Sigma0, sample_std, FX, labeling), P, T)
 end
 
 function allocation(policy::fEVIDiscreteOnOff,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
-    g = X2g(Xcurrent,policy.FX)
+    g = X2g(Xcurrent,policy.model.FX)
     t = length(W)
-    expected_outcomes = policy.theta_t[treatment_g2index.(1:policy.Wn, g, policy.gn)]
+    expected_outcomes = policy.model.theta_t[treatment_g2index.(1:policy.model.Wn, g, policy.model.gn)]
     expected_outcomes .-= minimum(expected_outcomes) - 1 # shift expected outcomes so that the worst is 1 and we can take the logarithm
     log_expected_outcomes = log.(expected_outcomes)
-    lognu = fEVI(policy.Wn, policy.gn, policy.theta_t, policy.Sigma_t, policy.sample_std, g, policy.p)
+    lognu = fEVI(policy.model.Wn, policy.model.gn, policy.model.theta_t, policy.model.Sigma_t, policy.model.sample_std, g, policy.model.p)
     lognu_on = logSumExp.(log_expected_outcomes, log(policy.T - t - 1) .+ lognu)
     lognu_combined = logSumExp.(lognu_on, log(policy.P) .+ lognu)
     return argmax_ties(lognu_combined, rng)

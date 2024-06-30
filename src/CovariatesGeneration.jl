@@ -4,7 +4,7 @@ using Copulas
 using Random
 import Base
 
-export CovariatesGenerator, CovariatesCopula, CovariatesIndependent, CovariatesInteracted, OrdinalDiscrete, marginals
+export CovariatesCopula, CovariatesIndependent, CovariatesInteracted, OrdinalDiscrete, marginals
 
 """
     struct CovariatesCopula{C} <: Sampleable{Multivariate,Continuous}

@@ -50,9 +50,9 @@ end
     fEVI_on = fEVIDiscreteOnOff(Wn, m, theta0, Sigma0, sample_std, FX, P, T, labeling)
     ContextualBandits.initialize!(fEVI_off)
     ContextualBandits.initialize!(fEVI_on)
-    W = [1]
+    W = 1
     X = rand(rng, FX)
-    Y = [rand(rng)]
+    Y = rand(rng)
     ContextualBandits.state_update!(fEVI_off, W, X, Y)
     ContextualBandits.state_update!(fEVI_on, W, X, Y)
     Xcurrent = rand(rng, FX)

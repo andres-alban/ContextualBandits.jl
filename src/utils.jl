@@ -56,12 +56,7 @@ end
 In-place version of [`interact`](@ref).
 """
 function interact!(WX,w,Wn,x,labeling=vcat(falses(size(x,1)),trues(Wn*size(x,1))))
-    length(w) == size(x,2) || throw(DomainError(w,"`w` must be the same length as the number of columns of `x`."))
     m = size(x,1)
-    d = sum(labeling)
-    length(labeling) == (Wn+1)*m || throw(DomainError(labeling,"`labeling` must have length `(Wn+1)*m`, where `m=size(x,1)`."))
-    size(WX,1) == d || throw(DomainError(WX,"`WX` must have `d` rows, where `d=sum(labeling)`."))
-    size(WX,2) == length(w) || throw(DomainError(WX,"`WX` must have the same number of columns as `x`."))
 
     for i in axes(WX,2)
         index = 0
@@ -81,52 +76,6 @@ function interact!(WX,w,Wn,x,labeling=vcat(falses(size(x,1)),trues(Wn*size(x,1))
 
     return WX
 end
-
-
-
-
-"""
-    BayesUpdateNormal(theta,Sigma,X,y,sample_std)
-
-Update Bayesian hyperparameters `theta` (mean vector) and `Sigma` (covariance matrix) of a linear regression model
-with regressor matrix `X`, outputs `y`, and sampling standard deviation `sample_std`.
-
-Return a copy of the updated `theta` and `Sigma`.
-
-`X` can be a vector of regressors or a matrix of regressors, where each column is a vector of regressors.
-In the latter case, `y` and `sample_std` can be vectors of the same length as the number of columns of `X`.
-
-See also: [BayesUpdateNormal!](@ref)
-"""
-function BayesUpdateNormal(theta,Sigma,X,y,sample_std)
-    BayesUpdateNormal!(copy(theta),copy(Sigma),X,y,sample_std)
-end
-
-"""
-    BayesUpdateNormal!(theta,Sigma,X,y,sample_std)
-
-In-place version of [BayesUpdateNormal](@ref)
-"""
-function BayesUpdateNormal!(theta,Sigma,X,y,sample_std)
-    theta .= theta .+ (y .- X'*theta)./(sample_std^2 .+ X'*Sigma*X) .* Sigma*X
-    Sigma .= Sigma - ((X' * Sigma)' * (X' *Sigma)) ./ (sample_std^2 .+ X'*Sigma*X)
-    return theta,Sigma
-end
-
-function BayesUpdateNormal!(theta,Sigma,X,y::AbstractVector,sample_std)
-    for i in eachindex(y)
-        BayesUpdateNormal!(theta,Sigma,view(X,:,i),y[i],sample_std)
-    end
-    return theta,Sigma
-end
-
-function BayesUpdateNormal!(theta,Sigma,X,y::AbstractVector,sample_std::AbstractVector)
-    for i in eachindex(y)
-        BayesUpdateNormal!(theta,Sigma,view(X,:,i),y[i],sample_std[i])
-    end
-    return theta,Sigma
-end
-
 
 """
     argmax_ties(itr,rng=Random.GLOBAL_RNG)
