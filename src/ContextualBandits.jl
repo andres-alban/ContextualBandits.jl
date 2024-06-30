@@ -7,13 +7,16 @@ using Distributed
 using Distributions
 
 include("utils.jl")
-export interact, interact!, interact2!, BayesUpdateNormal, BayesUpdateNormal!, argmax_ties, argmin_ties, randnMv
+export interact, interact!, interact2!, argmax_ties, argmin_ties, randnMv
 
 include("CovariatesGeneration.jl")
 using .CovariatesGeneration
 export CovariatesCopula, CovariatesIndependent, CovariatesInteracted, OrdinalDiscrete, marginals
 
 include("utils_discrete.jl")
+
+include("BayesLinearRegression.jl")
+export BayesLinearRegression, BayesUpdateNormal, BayesUpdateNormal!
 
 include("OutcomeModel/OutcomeModel.jl")
 export OutcomeModel
@@ -32,6 +35,9 @@ include("Policy/KG.jl")
 export cKG, iKG
 include("Policy/fEVI.jl")
 export fEVI, fEVIDiscrete, fEVIDiscreteOnOff
+include("Policy/fEVI_MC.jl")
+include("Policy/fEVI_MC_without_h.jl")
+export fEVI_MC, fEVI_MC_PolicyLinear
 
 
 include("simulation/replication_stochastic.jl")
