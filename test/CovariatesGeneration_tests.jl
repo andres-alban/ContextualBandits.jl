@@ -40,3 +40,18 @@ end
     FX = CovariatesIndependent([OrdinalDiscrete([1/3,1/3,1/3]),Normal(0,1)])
     @test rand(rng,FX) ==[1.0, 1.0, -0.9017438158568171]
 end
+
+@testset "covariates_partition" begin
+    FX = CovariatesIndependent([Categorical([1/3,1/3,1/3]),Normal(0,1)])
+    @test covariates_partition(FX) == [[2,3],[4]]
+    FX = CovariatesCopula([Categorical([1/3,1/3,1/3]),Normal(0,1)],GaussianCopula([1 0.2; 0.2 1]),false)
+    @test covariates_partition(FX) == [[1,2,3],[4]]
+    FX = CovariatesCopula([Categorical([1/3,1/3,1/3]),Normal(0,1)],GaussianCopula([1 0.2; 0.2 1]),true,false)
+    @test covariates_partition(FX) == [[2,3,4],[5]]
+    FX = CovariatesIndependent([Categorical([1/3,1/3,1/3]),Categorical(ones(4)/4)])
+    @test covariates_partition(FX) == [[2,3],[4,5,6]]
+    FX = CovariatesIndependent([Categorical([1/3,1/3,1/3]),Categorical([1])])
+    @test covariates_partition(FX) == [[2,3]]
+    FX = CovariatesIndependent([Categorical([1/3,1/3,1/3]),Categorical([1])],false)
+    @test covariates_partition(FX) == [[1,2,3],[4]]
+end

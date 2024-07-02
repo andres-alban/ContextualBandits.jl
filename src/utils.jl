@@ -17,6 +17,15 @@ function covariateFromIndex(i,m)
 end
 
 """
+    indexFromTreatmentCovariate(w,j,m)
+
+Return the index (position) from the treatment `w`, the covariate `j`, and the number of covariates `m`.
+"""
+function indexFromTreatmentCovariate(w,j,m)
+    return w*m + j
+end
+
+"""
     interact(w,Wn,x,labeling)
 
 Interact a treatment index `w` among `Wn` treatment alternatives with covariates `x`, where the coefficients labeled by `labeling` are active.
@@ -120,4 +129,59 @@ function randnMv(rng, mu, Sigma)
         chol = cholesky(Sigma,Val(true),check=false)
     end
     return mu .+ chol.L[invperm(chol.p),1:chol.rank]*randn(rng,chol.rank)
+end
+
+"""
+    labeling2predprog(Wn, FX::Union{CovariatesCopula, CovariatesIndependent}, labeling)
+
+Return the predictive and prognostic covariates from a `labeling` given the covariates generation given by FX.
+"""
+function labeling2predprog(Wn, FX::Union{CovariatesCopula, CovariatesIndependent}, labeling)
+    partition = covariates_partition(FX)
+    labeling2predprog(Wn, length(FX), labeling, partition)
+end
+
+"""
+    labeling2predprog(Wn, m, labeling, partition=[[i] for i in 2:m])
+
+Return the predictive and prognostic covariates from a `labeling` given the number
+of covariates `m` and the partition of covariates `partition`.
+"""
+function labeling2predprog(Wn, m, labeling, partition=[[i] for i in 2:m])
+    length(labeling) == (Wn+1)*m || throw(ArgumentError("length of labeling must be equal to (Wn+1)*m"))
+    intercept = !(1 in vcat(partition...))
+    sort(vcat(partition...)) == (1+intercept):m || throw(ArgumentError("partition must be a partition of 2:m (if there is an intercept) or 1:m (if there is no intercept)"))
+    predictive_bool = falses(m)
+    prognostic_bool = falses(m)
+    for j in (1+intercept):m
+        if labeling[indexFromTreatmentCovariate(0,j,m)]
+            prognostic_bool[j] = true
+        end
+        for w in 1:Wn
+            if labeling[indexFromTreatmentCovariate(w,j,m)]
+                predictive_bool[j] = true
+                break
+            end
+        end
+    end
+    predictive = findall(predictive_bool)
+    prognostic = Vector{Vector{Int}}(undef, 0)
+    for cov in partition
+        if !any(predictive_bool[cov]) # if there are no predictive
+            if any(prognostic_bool[cov])
+                push!(prognostic, copy(cov))
+            end
+        else
+            prog_candidate = Vector{Int}(undef, 0)
+            for j in cov
+                if !predictive_bool[j]
+                    push!(prog_candidate, j)
+                end
+            end
+            if !isempty(prog_candidate)
+                push!(prognostic, prog_candidate)
+            end
+        end
+    end
+    return predictive, prognostic
 end

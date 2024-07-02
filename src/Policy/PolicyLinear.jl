@@ -26,7 +26,7 @@ function implementation(policy::PolicyLinear,X_post,W,X,Y)
 end
 
 function policy_labeling(policy::PolicyLinear)
-    policy_labeling(policy.model)
+    model_labeling(policy.model)
 end
 
 """

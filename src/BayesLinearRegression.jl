@@ -30,7 +30,7 @@ function state_update!(model::BayesLinearRegression,W,X,Y)
     return
 end
 
-function policy_labeling(model::BayesLinearRegression)
+function model_labeling(model::BayesLinearRegression)
     return model.labeling
 end
 
@@ -132,6 +132,10 @@ function state_update!(model::BayesLinearRegressionDiscrete,W,X,Y)
     end
     BayesUpdateNormalDiscrete!(model.theta_t, model.Sigma_t, index, Y, model.sample_std)
     return
+end
+
+function model_labeling(model::BayesLinearRegressionDiscrete)
+    return model.labeling
 end
 
 function checkInputPolicyLinearDiscrete(Wn, m, theta0, Sigma0, sample_std, labeling, FX)

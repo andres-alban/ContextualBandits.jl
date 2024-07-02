@@ -4,7 +4,7 @@ using Copulas
 using Random
 import Base
 
-export CovariatesCopula, CovariatesIndependent, CovariatesInteracted, OrdinalDiscrete, marginals
+export CovariatesCopula, CovariatesIndependent, CovariatesInteracted, OrdinalDiscrete, marginals, covariates_partition
 
 """
     struct CovariatesCopula{C} <: Sampleable{Multivariate,Continuous}
@@ -197,6 +197,34 @@ function Distributions._rand!(rng::AbstractRNG,d::CovariatesIndependent, x::Abst
         end
     end
     return x
+end
+
+"""
+    covariates_partition(FX::Union{CovariatesCopula, CovariatesIndependent})
+
+Partition the covariates into indices representing each covariate.
+Categorical covariates are represented by several indices, while others by a single index.
+"""
+function covariates_partition(FX::Union{CovariatesCopula, CovariatesIndependent})
+    partition = Vector{Vector{Int}}(undef, 0)
+    index = 1
+    if FX.intercept
+        index += 1
+    end
+    for i in 1:length(FX.marginals)
+        if FX.cat[i]
+            len = length(support(FX.marginals[i]))-FX.reduce_category
+            partition_candidate = collect(index:(index+len-1))
+            if !isempty(partition_candidate)
+                push!(partition, partition_candidate)
+            end
+            index += len
+        else
+            push!(partition, [index])
+            index += 1
+        end
+    end
+    return partition
 end
 
 """

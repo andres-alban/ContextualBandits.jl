@@ -6,12 +6,12 @@ import Future.randjump
 using Distributed
 using Distributions
 
-include("utils.jl")
-export interact, interact!, interact2!, argmax_ties, argmin_ties, randnMv
-
 include("CovariatesGeneration.jl")
 using .CovariatesGeneration
-export CovariatesCopula, CovariatesIndependent, CovariatesInteracted, OrdinalDiscrete, marginals
+export CovariatesCopula, CovariatesIndependent, CovariatesInteracted, OrdinalDiscrete, marginals, covariates_partition
+
+include("utils.jl")
+export interact, interact!, interact2!, argmax_ties, argmin_ties, randnMv, labeling2predprog
 
 include("utils_discrete.jl")
 
@@ -38,6 +38,12 @@ export fEVI, fEVIDiscrete, fEVIDiscreteOnOff
 include("Policy/fEVI_MC.jl")
 include("Policy/fEVI_MC_without_h.jl")
 export fEVI_MC, fEVI_MC_PolicyLinear
+include("Policy/ThompsonSampling.jl")
+export TSPolicyLinear, TTTSPolicyLinear
+include("Policy/ocba.jl")
+export OCBAPolicyLinear
+include("Policy/biasedcoin.jl")
+export BiasedCoinPolicyLinear, RABC_OCBA_PolicyLinear
 
 
 include("simulation/replication_stochastic.jl")
