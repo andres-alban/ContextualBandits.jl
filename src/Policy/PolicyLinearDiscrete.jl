@@ -1,12 +1,12 @@
 """
-    PolicyLinearDiscrete <: PolicyLinear
+    PolicyLinearDiscrete <: Policy
 
 Abstract subtype of [PolicyLinear](@ref) that only accepts models that are discrete.
 Covariate vectors are converted to group indices using [X2g](@ref).
 
 All subtypes must include a `model::BayesLinearRegressionDiscrete` field.
 """
-abstract type PolicyLinearDiscrete <: PolicyLinear end
+abstract type PolicyLinearDiscrete <: Policy end
 
 function initialize!(policy::PolicyLinearDiscrete, W=Int[], X=Float64[], Y=Float64[])
     initialize!(policy.model, W, X, Y)

@@ -95,3 +95,44 @@ end
     x = randnMv(Random.GLOBAL_RNG, mu, Sigma)
     @test x[1] == x[2]
 end
+
+@testset "labeling2predprog" begin
+    Wn = 3
+    m = 3
+    labeling = Bool[0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0]
+    pred, prog = labeling2predprog(Wn, m, labeling)
+    @test pred == [2]
+    @test prog == [[3]]
+    
+    labeling = Bool[0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    pred, prog = labeling2predprog(Wn, m, labeling)
+    @test pred == []
+    @test prog == [[2],[3]]
+    
+    labeling = Bool[0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    pred, prog = labeling2predprog(Wn, m, labeling)
+    @test pred == [2,3]
+    @test prog == []
+
+    Wn = 2
+    m = 5
+    partition = [[2,3,4],[5]]
+    labeling = Bool[
+        0, 1, 1, 1, 1,
+        1, 1, 0, 0, 0,
+        1, 0, 0, 0, 0]
+    pred, prog = labeling2predprog(Wn, m, labeling, partition)
+    @test pred == [2]
+    @test prog == [[3,4],[5]]
+    FX = CovariatesIndependent([Categorical(ones(4)/4),Normal()])
+    @test partition == covariates_partition(FX)
+    pred, prog = labeling2predprog(Wn, FX, labeling)
+    @test pred == [2]
+    @test prog == [[3,4],[5]]
+
+    
+    FX = CovariatesIndependent([Categorical(ones(4)/4),Normal()], false)
+    pred, prog = labeling2predprog(Wn, FX, labeling)
+    @test pred == [1,2]
+    @test prog == [[3,4],[5]]
+end

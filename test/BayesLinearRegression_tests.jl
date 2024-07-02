@@ -1,0 +1,48 @@
+using ContextualBandits
+using Random
+using Distributions
+using LinearAlgebra
+using Test
+
+@testset "BayesLinearRegression" begin
+    Wn = 2
+    FX = CovariatesIndependent([Normal(),Normal()])
+    m = length(FX)
+    sample_std = 1.0
+    labeling = [true, false, false, false, true, true, false, true, true]
+    theta0 = zeros(sum(labeling))
+    Sigma0 = Diagonal(ones(sum(labeling)))
+    model = BayesLinearRegression(Wn, m, theta0, Sigma0, sample_std, labeling)
+    ContextualBandits.initialize!(model,[],[],[])
+    @test model.theta_t == theta0
+    @test model.Sigma_t == Sigma0
+    X = [1.0, 2.0, 5.0]
+    W = 1
+    Y = 1.0
+    ContextualBandits.state_update!(model,W,X,Y)
+    @test model.theta_t == [0.03225806451612903, 0.06451612903225806, 0.16129032258064516, 0.0, 0.0]
+    @test model.Sigma_t == [0.967741935483871 -0.06451612903225806 -0.16129032258064516 0.0 0.0; -0.06451612903225806 0.8709677419354839 -0.3225806451612903 0.0 0.0; -0.16129032258064516 -0.3225806451612903 0.19354838709677424 0.0 0.0; 0.0 0.0 0.0 1.0 0.0; 0.0 0.0 0.0 0.0 1.0]
+    @test ContextualBandits.model_labeling(model) == labeling
+end
+
+@testset "BayesLinearRegressionDiscrete" begin
+    Wn = 2
+    FX = CovariatesIndependent([Categorical([1/2,1/2]),Categorical([1/2,1/2])])
+    m = length(FX)
+    sample_std = 1.0
+    labeling = [true, false, false, false, true, true, false, true, true]
+    theta0 = zeros(sum(labeling))
+    Sigma0 = Diagonal(ones(sum(labeling)))
+    model = ContextualBandits.BayesLinearRegressionDiscrete(Wn, m, theta0, Sigma0, sample_std, FX, labeling)
+    ContextualBandits.initialize!(model,[],[],[])
+    theta0_disc, Sigma0_disc = ContextualBandits.X2g_prior(theta0, Sigma0, FX, labeling, Wn)
+    @test model.theta_t == theta0_disc
+    @test model.Sigma_t == Sigma0_disc
+    X = [1.0, 1.0, 0.0]
+    W = 1
+    Y = 1.0
+    ContextualBandits.state_update!(model,W,X,Y)
+    @test model.theta_t == [0.3333333333333333, 0.3333333333333333, 0.6666666666666666, 0.6666666666666666, 0.3333333333333333, 0.3333333333333333, 0.3333333333333333, 0.3333333333333333]
+    @test model.Sigma_t == [0.6666666666666667 0.6666666666666667 0.33333333333333337 0.33333333333333337 0.6666666666666667 0.6666666666666667 0.6666666666666667 0.6666666666666667; 0.6666666666666667 1.6666666666666667 0.33333333333333337 1.3333333333333335 0.6666666666666667 0.6666666666666667 0.6666666666666667 0.6666666666666667; 0.33333333333333337 0.33333333333333337 0.6666666666666667 0.6666666666666667 0.33333333333333337 0.33333333333333337 0.33333333333333337 0.33333333333333337; 0.33333333333333337 1.3333333333333335 0.6666666666666667 1.6666666666666667 0.33333333333333337 0.33333333333333337 0.33333333333333337 0.33333333333333337; 0.6666666666666667 0.6666666666666667 0.33333333333333337 0.33333333333333337 0.6666666666666667 0.6666666666666667 0.6666666666666667 0.6666666666666667; 0.6666666666666667 0.6666666666666667 0.33333333333333337 0.33333333333333337 0.6666666666666667 1.6666666666666667 0.6666666666666667 1.6666666666666667; 0.6666666666666667 0.6666666666666667 0.33333333333333337 0.33333333333333337 0.6666666666666667 0.6666666666666667 1.6666666666666667 1.6666666666666667; 0.6666666666666667 0.6666666666666667 0.33333333333333337 0.33333333333333337 0.6666666666666667 1.6666666666666667 1.6666666666666667 2.6666666666666665]
+    @test ContextualBandits.model_labeling(model) == labeling
+end
