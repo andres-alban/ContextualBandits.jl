@@ -28,6 +28,8 @@ include("fEVI_MC_tests.jl")
 include("ThompsonSampling_tests.jl")
 include("ocba_tests.jl")
 include("biasedcoin_tests.jl")
+include("LabelingSelector_tests.jl")
+include("InferLabelingPolicy_tests.jl")
 println("Tests complete for Policy folder.")
 
 println("Running tests for simulation folder...")

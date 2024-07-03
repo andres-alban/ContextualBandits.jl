@@ -19,13 +19,13 @@ function initialize!(policy::Policy,W=Int[],X=Float64[],Y=Float64[])
 end
 
 """
-    state_update!(policy::Policy,W,X,Y)
+    state_update!(policy::Policy,W,X,Y,rng=Random.GLOBAL_RNG)
 
 Update the state of a policy givent the data `W`, `X`, and `Y`. `W` is the vector of treatments, `X` is the matrix of covariates, and `Y` is the vector of outcomes.
 
 For example, the policy may do Bayesian updating to get posterior parameters.
 """
-function state_update!(policy::Policy,W,X,Y)
+function state_update!(policy::Policy,W,X,Y,rng=Random.GLOBAL_RNG)
 end
 
 """
@@ -52,22 +52,26 @@ end
 
 function allocationIndependent(policy::Policy,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG,check=false,delay=0,Wpilot=[],Xpilot=[],Ypilot=[])
     initialize!(policy,Wpilot,Xpilot,Ypilot)
-    for t in 1:(length(Y)+delay)
+    T = length(Y)
+    for t in 1:(T+delay)
         if check
             w = allocation(policy,Xcurrent,view(W,1:(t-1)),view(X,:,1:(t-1)),view(Y,1:(t-delay-1)),rng)
             w == W[t] || @warn "The treatment in the data does not match the treatment allocated by the policy at time $t."
         end
-        if t > delay
-            state_update!(policy,W[t-delay],view(X,:,t-delay),Y[t-delay])
-        end
+        Wav = view(W,1:min(t,T))
+        Xav = view(X,:,1:min(t,T))
+        Yav = view(Y,1:(t-delay))
+
+        # Update state of policy
+        state_update!(policy,Wav,Xav,Yav,rng)
     end
     return allocation(policy, Xcurrent, W, X, Y, rng)
 end
 
-function implementationIndependent(policy::Policy,X_post,W,X,Y,Wpilot=Int[],Xpilot=Float64[],Ypilot=Float64[])
+function implementationIndependent(policy::Policy,X_post,W,X,Y,rng=Random.GLOBAL_RNG,Wpilot=Int[],Xpilot=Float64[],Ypilot=Float64[])
     initialize!(policy,Wpilot,Xpilot,Ypilot)
     for t in eachindex(Y)
-        state_update!(policy,W[t],view(X,:,t),Y[t])
+        state_update!(policy,view(W,1:t),view(X,:,1:t),view(Y,1:t),rng)
     end
     return implementation(policy,X_post,W,X,Y)
 end

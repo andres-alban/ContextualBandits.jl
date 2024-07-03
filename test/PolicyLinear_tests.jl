@@ -25,8 +25,8 @@ using Test
     @test ContextualBandits.implementation(policy,X,W,X,Y) == [1]
     @test ContextualBandits.policy_labeling(policy) == labeling
     rng = MersenneTwister(1234)
-    @test ContextualBandits.allocationIndependent(policy,X,W,X,Y,rng) == w
-    @test ContextualBandits.implementationIndependent(policy,X,W,X,Y) == [1]
+    @test ContextualBandits.allocationIndependent(policy,X,[W],X,[Y],rng) == w
+    @test ContextualBandits.implementationIndependent(policy,X,[W],X,[Y]) == [1]
 
     ContextualBandits.initialize!(policy,W,X,Y)
     @test policy.model.theta_t == [0.0, 2.142857142857143, 1.1428571428571428, 2.142857142857143, 2.0]

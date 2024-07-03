@@ -24,11 +24,11 @@ using Test
     W = rand(rng, 1:Wn, 200)
     Y = randn(rng, 200)
     for i in eachindex(Y)
-        ContextualBandits.state_update!(policy, W[i], view(X,:,i), Y[i])
+        ContextualBandits.state_update!(policy, W[1:i], view(X,:,1:i), Y[1:i], rng)
     end
     w = ContextualBandits.allocation(policy, Xcurrent, W, X, Y, rng)
     @test w == 2
-    ContextualBandits.state_update!(policy, w, Xcurrent, randn(rng))
+    ContextualBandits.state_update!(policy, w, Xcurrent, randn(rng), rng)
     @test policy.model.theta_t == [0.32043894256754457, -0.2868626983183138, 0.2216002700633016, -0.3764185200729958, 0.32565621625021324, 0.09583575552810948, -0.2817055714305785]
     @test ContextualBandits.implementation(policy, Xcurrent, W, X, Y) == [2]
 
@@ -60,11 +60,11 @@ end
     W = rand(rng, 1:Wn, 200)
     Y = randn(rng, 200)
     for i in eachindex(Y)
-        ContextualBandits.state_update!(policy, W[i], view(X,:,i), Y[i])
+        ContextualBandits.state_update!(policy, W[1:i], view(X,:,1:i), Y[1:i], rng)
     end
     w = ContextualBandits.allocation(policy, Xcurrent, W, X, Y, rng)
     @test w == 2
-    ContextualBandits.state_update!(policy, w, Xcurrent, randn(rng))
+    ContextualBandits.state_update!(policy, w, Xcurrent, randn(rng), rng)
     @test policy.model.theta_t == [0.32043894256754457, -0.2868626983183138, 0.2216002700633016, -0.3764185200729958, 0.32565621625021324, 0.09583575552810948, -0.2817055714305785]
     @test ContextualBandits.implementation(policy, Xcurrent, W, X, Y) == [2]
 

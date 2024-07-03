@@ -23,7 +23,7 @@ using Test
     W = rand(rng, 1:Wn, 20)
     Y = randn(rng, 20)
     for i in eachindex(Y)
-        ContextualBandits.state_update!(policy, W[i], view(X,:,i), Y[i])
+        ContextualBandits.state_update!(policy, W[1:i], view(X,:,1:i), Y[1:i])
     end
     w = ContextualBandits.allocation(policy, Xcurrent, W, X, Y, rng)
     @test w == 1

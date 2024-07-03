@@ -61,7 +61,7 @@ end
     Y = rand(rng,1)
     Xt = rand(rng,FXtilde)
     @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) == 2
-    ContextualBandits.state_update!(policy, W, X, Y)
+    ContextualBandits.state_update!(policy, W, X, Y, rng)
     @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) == 2
     @test ContextualBandits.implementation(policy, Xt, W, X, Y) == [2]
 end

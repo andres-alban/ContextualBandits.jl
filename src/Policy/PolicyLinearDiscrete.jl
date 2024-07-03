@@ -6,14 +6,17 @@ Covariate vectors are converted to group indices using [X2g](@ref).
 
 All subtypes must include a `model::BayesLinearRegressionDiscrete` field.
 """
-abstract type PolicyLinearDiscrete <: Policy end
+abstract type PolicyLinearDiscrete <: PolicyLinear end
 
 function initialize!(policy::PolicyLinearDiscrete, W=Int[], X=Float64[], Y=Float64[])
     initialize!(policy.model, W, X, Y)
 end
 
-function state_update!(policy::PolicyLinearDiscrete, W, X, Y)
-    state_update!(policy.model, W, X, Y)
+function state_update!(policy::PolicyLinearDiscrete, W, X, Y, rng=Random.GLOBAL_RNG)
+    t = length(Y)
+    if t > 0
+        state_update!(policy.model, W[t], view(X,:,t), Y[t])
+    end
 end
 
 function implementation(policy::PolicyLinearDiscrete, X_post, W, X, Y)
