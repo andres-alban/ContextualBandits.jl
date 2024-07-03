@@ -27,15 +27,13 @@ function replication_stochastic(X,X_post,Z,Wn,delay,policy,outcome_model,recorde
             Y[t] = noisy_outcome(outcome_model,w,view(X,:,t),Z[t])
         end
 
-        # Update state of policy
-        if t > delay
-            state_update!(policy,W[t-delay],view(X,:,t-delay),Y[t-delay])
-        end
-
         # Available data at time t
         Wav = view(W,1:min(t,T))
         Xav = view(X,:,1:min(t,T))
         Yav = view(Y,1:(t-delay))
+
+        # Update state of policy
+        state_update!(policy,Wav,Xav,Yav,rng)
 
         # record metrics
         w = 1 <= t <= T ? W[t] : NaN

@@ -5,6 +5,7 @@ using Statistics
 import Future.randjump
 using Distributed
 using Distributions
+using GLMNet
 
 include("CovariatesGeneration.jl")
 using .CovariatesGeneration
@@ -44,6 +45,11 @@ include("Policy/ocba.jl")
 export OCBAPolicyLinear
 include("Policy/biasedcoin.jl")
 export BiasedCoinPolicyLinear, RABC_OCBA_PolicyLinear
+
+include("Policy/LabelingSelector.jl")
+export LabelingSelector, LassoCVLabelingSelector
+include("Policy/InferLabelingPolicy.jl")
+export InferLabelingPolicy
 
 
 include("simulation/replication_stochastic.jl")

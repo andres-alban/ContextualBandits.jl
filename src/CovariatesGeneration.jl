@@ -7,7 +7,7 @@ import Base
 export CovariatesCopula, CovariatesIndependent, CovariatesInteracted, OrdinalDiscrete, marginals, covariates_partition
 
 """
-    struct CovariatesCopula{C} <: Sampleable{Multivariate,Continuous}
+    CovariatesCopula{C} <: Sampleable{Multivariate,Continuous}
     CovariatesCopula(marginals,copula,intercept=true,reduce_category=true)
 
 Sampleable to randomly generate a vector of covariates using marginal distributions and copulas from the Copulas.jl package.
@@ -114,7 +114,7 @@ function Distributions._rand!(rng::AbstractRNG,d::CovariatesCopula, x::AbstractV
 end
 
 """
-    struct CovariatesIndependent <: Sampleable{Multivariate,Continuous}
+    CovariatesIndependent <: Sampleable{Multivariate,Continuous}
     CovariatesIndependent(marginals::Array{<:Distribution{Univariate,S} where S<:ValueSupport,1},intercept=false,reduce_category=false)
 
 Sampleable to randomly generate a vector of covariates using marginal distributions assuming the values are independent of each other.
@@ -228,7 +228,7 @@ function covariates_partition(FX::Union{CovariatesCopula, CovariatesIndependent}
 end
 
 """
-    struct CovariatesInteracted{T<:Sampleable} <: Sampleable{Multivariate,Continuous}
+    CovariatesInteracted{T<:Sampleable} <: Sampleable{Multivariate,Continuous}
     CovariatesInteracted(generator::T,interact_functions::Vector{Function})
 
 Sampleable to randomly generate a vector of covariates using a base generator and a vector of functions to interact the covariates from the base generator.

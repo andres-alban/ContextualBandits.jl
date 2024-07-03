@@ -18,7 +18,7 @@ using Test
     Xcurrent = [1.0, 2.0, 5.0]
     w = ContextualBandits.allocation(policy, Xcurrent, [], [], [], rng)
     @test w == 2
-    ContextualBandits.state_update!(policy, w, Xcurrent, 1.0)
+    ContextualBandits.state_update!(policy, w, Xcurrent, 1.0, rng)
     @test policy.model.theta_t == [0.0, 0.0, 0.0, 0.03225806451612903, 0.06451612903225806, 0.16129032258064516, 0.0, 0.0, 0.0]
     @test ContextualBandits.implementation(policy, Xcurrent, [], [], []) == [2]
 end
@@ -40,7 +40,7 @@ end
     Xcurrent = [1.0, 2.0, 5.0]
     w = ContextualBandits.allocation(policy, Xcurrent, [], [], [], rng)
     @test w == 3
-    ContextualBandits.state_update!(policy, w, Xcurrent, 1.0)
+    ContextualBandits.state_update!(policy, w, Xcurrent, 1.0, rng)
     @test policy.model.theta_t == [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.03225806451612903, 0.06451612903225806, 0.16129032258064516]
     @test ContextualBandits.implementation(policy, Xcurrent, [], [], []) == [3]
 end
