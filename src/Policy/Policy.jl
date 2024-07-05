@@ -21,7 +21,7 @@ end
 """
     state_update!(policy::Policy,W,X,Y,rng=Random.GLOBAL_RNG)
 
-Update the state of a policy givent the data `W`, `X`, and `Y`. `W` is the vector of treatments, `X` is the matrix of covariates, and `Y` is the vector of outcomes.
+Update the state of a policy given the data `W`, `X`, and `Y`. `W` is the vector of treatments, `X` is the matrix of covariates, and `Y` is the vector of outcomes.
 
 For example, the policy may do Bayesian updating to get posterior parameters.
 """
