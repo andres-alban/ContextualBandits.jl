@@ -6,6 +6,7 @@ import Future.randjump
 using Distributed
 using Distributions
 using GLMNet
+using QuadGK
 
 include("CovariatesGeneration.jl")
 using .CovariatesGeneration
@@ -50,6 +51,9 @@ include("Policy/LabelingSelector.jl")
 export LabelingSelector, LassoCVLabelingSelector
 include("Policy/InferLabelingPolicy.jl")
 export InferLabelingPolicy
+
+include("Policy/DiscretizePolicy.jl")
+export DiscretizePolicy, discretizeFX
 
 
 include("simulation/replication_stochastic.jl")
