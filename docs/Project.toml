@@ -1,0 +1,6 @@
+[deps]
+ContextualBandits = "b30de75d-69a8-450b-96d3-f36be60bd625"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+
+[compat]
+Documenter = "1.5"
