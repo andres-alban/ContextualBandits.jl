@@ -20,11 +20,11 @@ function state_update!(policy::PolicyLinearDiscrete, W, X, Y, rng=Random.GLOBAL_
 end
 
 function implementation(policy::PolicyLinearDiscrete, X_post, W, X, Y)
-    n = size(X_post,2)
-    treat_post = Vector{Int}(undef,n)
-    for k in 1:n
+    P = size(X_post,2)
+    treat_post = Vector{Int}(undef,P)
+    for k in 1:P
         g = X2g(view(X_post,:,k), policy.model.FX)
-        treat_post[k] = argmax(policy.model.theta_t[treatment_g2index.(1:policy.model.Wn, g, policy.model.gn)])
+        treat_post[k] = argmax(policy.model.theta_t[treatment_g2index.(1:policy.model.n, g, policy.model.gn)])
     end
     return treat_post
 end

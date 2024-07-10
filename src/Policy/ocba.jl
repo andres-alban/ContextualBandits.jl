@@ -32,8 +32,8 @@ end
 
 """
     OCBAPolicyLinear <: PolicyLinear
-    OCBAPolicyLinear(Wn, m, theta0, Sigma0, sample_std, predictive, labeling=vcat(falses(m),trues(Wn*m)))
-    OCBAPolicyLinear(Wn, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula, CovariatesIndependent}, labeling=vcat(falses(m),trues(Wn*m)))
+    OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, predictive, labeling=vcat(falses(m),trues(n*m)))
+    OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula, CovariatesIndependent}, labeling=vcat(falses(m),trues(n*m)))
 
 Allocate treatment using the OCBA algorithm and update based on the linear model with labeling to make an implementation.
 
@@ -54,20 +54,20 @@ struct OCBAPolicyLinear <: PolicyLinear
     end
 end
 
-function OCBAPolicyLinear(Wn, m, theta0, Sigma0, sample_std, predictive, labeling=vcat(falses(m),trues(Wn*m)))
-    OCBAPolicyLinear(BayesLinearRegression(Wn, m, theta0, Sigma0, sample_std, labeling), predictive)
+function OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, predictive, labeling=vcat(falses(m),trues(n*m)))
+    OCBAPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), predictive)
 end
 
-function OCBAPolicyLinear(Wn, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula, CovariatesIndependent}, labeling=vcat(falses(m),trues(Wn*m)))
-    predictive, _ = labeling2predprog(Wn, FX, labeling)
-    OCBAPolicyLinear(BayesLinearRegression(Wn, m, theta0, Sigma0, sample_std, labeling), predictive)
+function OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula, CovariatesIndependent}, labeling=vcat(falses(m),trues(n*m)))
+    predictive, _ = labeling2predprog(n, FX, labeling)
+    OCBAPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), predictive)
 end
 
 function allocation(policy::OCBAPolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
     # We only consider patients in the same predictive group
     index_subgroup = [X[policy.predictive,i] == Xcurrent[policy.predictive] for i in axes(X,2)]
     W_subgroup = @view W[index_subgroup]
-    p = [sum(W_subgroup .== w) for w in 1:policy.model.Wn]
+    p = [sum(W_subgroup .== w) for w in 1:policy.model.n]
     unobserved_treatments = findall(p .== 0)
     if length(unobserved_treatments) == 1
         return unobserved_treatments[1]
@@ -75,7 +75,7 @@ function allocation(policy::OCBAPolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RN
         return rand(rng,unobserved_treatments)
     end
     p /= length(W_subgroup)
-    means = [interact(iw,policy.model.Wn,Xcurrent, policy.model.labeling)' * policy.model.theta_t for iw in 1:policy.model.Wn]
+    means = [interact(iw,policy.model.n,Xcurrent, policy.model.labeling)' * policy.model.theta_t for iw in 1:policy.model.n]
     # Before computing the OCBA probabilities, we would like to identify the alternatives 
     # that are equivalent in the sense that they are perfectly correlated and 
     # have the same mean and variance. For simplicity, here we assume that arms
@@ -85,7 +85,7 @@ function allocation(policy::OCBAPolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RN
     means,m,c = unique_values_helper(means)
     vars = ones(length(means)) * policy.model.sample_std^2
     p_ocba = ocba_normal(means,vars)
-    p_ocba_final = [p_ocba[m[i]]/c[i] for i in 1:policy.model.Wn]
+    p_ocba_final = [p_ocba[m[i]]/c[i] for i in 1:policy.model.n]
     return argmax_ties(p_ocba_final - p, rng)
 end
 

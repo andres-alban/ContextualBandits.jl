@@ -9,18 +9,18 @@ using Test
     rng = MersenneTwister(122)
     FX = CovariatesIndependent([Normal(),Normal()]) # Covariates with an intercept and two normally distributed covriates 
     X = rand(rng,FX,samplesize)
-    Wn = 2
-    W = rand(rng,1:Wn,samplesize)
-    labeling = ones(Bool,(Wn+1)*length(FX))
+    n = 2
+    W = rand(rng,1:n,samplesize)
+    labeling = ones(Bool,(n+1)*length(FX))
     labeling[1] = 0
     # covariate matrix
-    WX = interact(W,Wn,X,labeling)
+    WX = interact(W,n,X,labeling)
     sigma = 0.1
     theta_true = [0,1,0, 1,-1,0, 0,2,1]
     # outcome variable
     y = vcat(ones(size(WX,2))',WX)' * theta_true + sigma*randn(rng,samplesize)
 
-    selector = LassoCVLabelingSelector(Wn, length(FX))
+    selector = LassoCVLabelingSelector(n, length(FX))
 
     newlabeling = ContextualBandits.labeling_selection(selector,W,X,y)
     @test newlabeling == Bool[0, 0, 0, 1, 0, 0, 1, 1, 1]

@@ -20,10 +20,10 @@ function state_update!(policy::PolicyLinear,W,X,Y,rng=Random.GLOBAL_RNG)
 end
 
 function implementation(policy::PolicyLinear,X_post,W,X,Y)
-    n = size(X_post,2)
-    treat_post = Vector{Int}(undef,n)
-    for k in 1:n 
-        treat_post[k] = argmax([interact(iw, policy.model.Wn, view(X_post,:,k), policy.model.labeling)' * policy.model.theta_t for iw in 1:policy.model.Wn])
+    P = size(X_post,2)
+    treat_post = Vector{Int}(undef,P)
+    for k in 1:P 
+        treat_post[k] = argmax([interact(iw, policy.model.n, view(X_post,:,k), policy.model.labeling)' * policy.model.theta_t for iw in 1:policy.model.n])
     end
     return treat_post
 end
@@ -34,7 +34,7 @@ end
 
 """
     RandomPolicyLinear <: PolicyLinear
-    RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(Wn*m)))
+    RandomPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(n*m)))
 
 Allocate treatment uniformly at random.
 Use a linear model (with `labeling`) to make an implementation.
@@ -43,17 +43,17 @@ struct RandomPolicyLinear <: PolicyLinear
     model::BayesLinearRegression
 end
 
-function RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(Wn*m)))
-    RandomPolicyLinear(BayesLinearRegression(Wn, m, theta0, Sigma0, sample_std, labeling))
+function RandomPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(n*m)))
+    RandomPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling))
 end
 
 function allocation(policy::RandomPolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
-    rand(rng,1:policy.model.Wn)
+    rand(rng,1:policy.model.n)
 end
 
 """
     GreedyPolicyLinear <: PolicyLinear
-    GreedyPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(Wn*m)))
+    GreedyPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(n*m)))
 
 Allocate and implement the treatment with the largest expected outcome based on 
 a linear model (with `labeling`).
@@ -62,10 +62,10 @@ struct GreedyPolicyLinear <: PolicyLinear
     model::BayesLinearRegression
 end
 
-function GreedyPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(Wn*m)))
-    GreedyPolicyLinear(BayesLinearRegression(Wn, m, theta0, Sigma0, sample_std, labeling))
+function GreedyPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(n*m)))
+    GreedyPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling))
 end
 
 function allocation(policy::GreedyPolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
-    return argmax_ties([interact(iw, policy.model.Wn, Xcurrent, policy.model.labeling)' * policy.model.theta_t for iw in 1:policy.model.Wn], rng)
+    return argmax_ties([interact(iw, policy.model.n, Xcurrent, policy.model.labeling)' * policy.model.theta_t for iw in 1:policy.model.n], rng)
 end

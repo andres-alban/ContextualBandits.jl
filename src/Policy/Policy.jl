@@ -79,18 +79,18 @@ end
 # Some triavial policies
 
 struct RandomPolicy <: Policy
-    Wn::Int
+    n::Int
 end
 
 function allocation(policy::RandomPolicy,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
-    return rand(rng,1:policy.Wn)
+    return rand(rng,1:policy.n)
 end
 
 
 struct RoundRobinPolicy <: Policy
-    Wn::Int
+    n::Int
 end
 
 function allocation(policy::RoundRobinPolicy,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
-    return (length(W) % policy.Wn) + 1
+    return (length(W) % policy.n) + 1
 end
