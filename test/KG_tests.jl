@@ -5,7 +5,6 @@ using Random
 using Test
 
 @testset "KG functions" begin
-    n = 10
     theta = rand(10)
     sigmasq = rand(10)
     sample_std = rand(10)

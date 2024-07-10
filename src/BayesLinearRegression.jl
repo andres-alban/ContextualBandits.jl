@@ -1,5 +1,13 @@
+"""
+    BayesLinearRegression(n, m, theta0, Sigma0, sample_std[, labeling])
+
+Bayesian linear regression model with `n` treatments and `m` covariates.
+
+See also: [ContextualBandits.initialize!](@ref), [ContextualBandits.state_update!](@ref),
+[BayesUpdateNormal](@ref), [BayesUpdateNormal!](@ref)
+"""
 mutable struct BayesLinearRegression
-    Wn::Int
+    n::Int
     m::Int
     theta0::Vector{Float64}
     Sigma0::Matrix{Float64}
@@ -7,26 +15,32 @@ mutable struct BayesLinearRegression
     labeling::BitVector
     theta_t::Vector{Float64}
     Sigma_t::Matrix{Float64}
-    function BayesLinearRegression(Wn, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(Wn*m)))
-        checkInputPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling)
-        new(Wn, m, copy(theta0), copy(Sigma0), sample_std, copy(labeling), similar(theta0), similar(Sigma0))
+    function BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(n*m)))
+        checkInputPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling)
+        new(n, m, copy(theta0), copy(Sigma0), sample_std, copy(labeling), similar(theta0), similar(Sigma0))
     end
 end
 
-function initialize!(model::BayesLinearRegression,W=Int[],X=Float64[],Y=Float64[])
-    if length(Y) == 0
-        model.theta_t = copy(model.theta0)
-        model.Sigma_t = copy(model.Sigma0)
-    else # pilot data to build the prior
-        WX = interact(W, model.Wn, X, model.labeling)
-        model.theta_t, model.Sigma_t = BayesUpdateNormal(model.theta0, model.Sigma0, WX, Y, model.sample_std)
-        robustify_prior_linear!(model.theta_t, model.Sigma_t, model.Wn, model.m, model.labeling)
-    end
+"""
+    initialize!(model::BayesLinearRegression)
+
+Reset the posterior mean `model.theta_t` and covariance matrix `model.Sigma_t` to the prior 
+mean `theta0` and covariance matrix `Sigma0`.
+"""
+function initialize!(model::BayesLinearRegression)
+    model.theta_t = copy(model.theta0)
+    model.Sigma_t = copy(model.Sigma0)
     return
 end
 
+"""
+    state_update!(model::BayesLinearRegression, W, X, Y)
+
+Update the posterior mean `model.theta_t` and covariance matrix `model.Sigma_t`
+after observing treatments `W`, covariates `X`, and outcomes `Y`.
+"""
 function state_update!(model::BayesLinearRegression,W,X,Y)
-    BayesUpdateNormal!(model.theta_t, model.Sigma_t, interact(W, model.Wn, X, model.labeling), Y, model.sample_std)
+    BayesUpdateNormal!(model.theta_t, model.Sigma_t, interact(W, model.n, X, model.labeling), Y, model.sample_std)
     return
 end
 
@@ -34,9 +48,9 @@ function model_labeling(model::BayesLinearRegression)
     return model.labeling
 end
 
-function checkInputPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling)
+function checkInputPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling)
     d = sum(labeling)
-    length(labeling) == (Wn+1)*m || throw(DomainError(labeling,"`labeling` must have length `(Wn+1)*m`."))
+    length(labeling) == (n+1)*m || throw(DomainError(labeling,"`labeling` must have length `(n+1)*m`."))
     length(theta0) == d || throw(DomainError(theta0,"`theta0` must be of length `sum(labeling)`."))
     size(Sigma0) == (d,d) || throw(DomainError(Sigma0,"`Sigma0` must be of dimensions `sum(labeling)`."))
     issymmetric(Sigma0) || throw(DomainError(Sigma0,"`Sigma0` must be symmetric."))
@@ -94,7 +108,7 @@ end
 
 
 mutable struct BayesLinearRegressionDiscrete
-    Wn::Int
+    n::Int
     m::Int
     theta0::Vector{Float64}
     Sigma0::Matrix{Float64}
@@ -105,21 +119,21 @@ mutable struct BayesLinearRegressionDiscrete
     p::Vector{Float64}
     theta_t::Vector{Float64}
     Sigma_t::Matrix{Float64}
-    function BayesLinearRegressionDiscrete(Wn, m, theta0, Sigma0, sample_std, FX, labeling=vcat(falses(m),trues(Wn*m)))
-        checkInputPolicyLinearDiscrete(Wn, m, theta0, Sigma0, sample_std, labeling, FX)
+    function BayesLinearRegressionDiscrete(n, m, theta0, Sigma0, sample_std, FX, labeling=vcat(falses(m),trues(n*m)))
+        checkInputPolicyLinearDiscrete(n, m, theta0, Sigma0, sample_std, labeling, FX)
         gn = total_groups(FX)
-        new(Wn, m, copy(theta0), copy(Sigma0), sample_std, copy(labeling), FX, gn, X2g_probs(FX), similar(theta0), similar(Sigma0))
+        new(n, m, copy(theta0), copy(Sigma0), sample_std, copy(labeling), FX, gn, X2g_probs(FX), similar(theta0), similar(Sigma0))
     end
 end
 
 function initialize!(model::BayesLinearRegressionDiscrete,W=Int[],X=Float64[],Y=Float64[])
     if length(Y) > 0
-        WX = interact(W, model.Wn, X, model.labeling)
+        WX = interact(W, model.n, X, model.labeling)
         theta, Sigma = BayesUpdateNormal(model.theta0, model.Sigma0, WX, Y, model.sample_std)
-        robustify_prior!(theta, Sigma, model.Wn, model.labeling)
-        model.theta_t, model.Sigma_t = X2g_prior(theta, Sigma, model.FX, model.labeling, model.Wn)
+        robustify_prior!(theta, Sigma, model.n, model.labeling)
+        model.theta_t, model.Sigma_t = X2g_prior(theta, Sigma, model.FX, model.labeling, model.n)
     else
-        model.theta_t, model.Sigma_t = X2g_prior(model.theta0, model.Sigma0, model.FX, model.labeling, model.Wn)
+        model.theta_t, model.Sigma_t = X2g_prior(model.theta0, model.Sigma0, model.FX, model.labeling, model.n)
     end
     return
 end
@@ -138,9 +152,9 @@ function model_labeling(model::BayesLinearRegressionDiscrete)
     return model.labeling
 end
 
-function checkInputPolicyLinearDiscrete(Wn, m, theta0, Sigma0, sample_std, labeling, FX)
+function checkInputPolicyLinearDiscrete(n, m, theta0, Sigma0, sample_std, labeling, FX)
     m == length(FX) || throw(DomainError("The number of covariates m must be the same as the length of FX."))
-    checkInputPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling)
+    checkInputPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling)
     for marginal in marginals(FX)
         typeof(marginal) <: Categorical || typeof(marginal) <: OrdinalDiscrete || throw(DomainError("marginal distributions need to be either `Categorical` or `OrdinalDiscrete`."))
     end

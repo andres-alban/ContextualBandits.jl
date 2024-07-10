@@ -88,22 +88,22 @@ function treatment_g2index(w,g,gn)
 end
 
 """
-    X2g_prior(theta0,Sigma0,FX,labeling,Wn)
+    X2g_prior(theta0,Sigma0,FX,labeling,n)
 
 Transform the prior for covariate values to the prior for groups.
 """
-function X2g_prior(theta0,Sigma0,FX,labeling,Wn)
+function X2g_prior(theta0,Sigma0,FX,labeling,n)
     gn = total_groups(FX)
     Xs = Matrix{Float64}(undef,length(FX),gn)
     for g in 1:gn
         Xs[:,g] = g2X(g,FX)
     end
-    combs = gn*Wn
+    combs = gn*n
     theta0_disc = zeros(combs)
     for i in 1:combs
         w = index2treatment(i,gn)
         g = index2g(i,gn)
-        theta0_disc[i] = interact(w,Wn,view(Xs,:,g),labeling)' * theta0
+        theta0_disc[i] = interact(w,n,view(Xs,:,g),labeling)' * theta0
     end
 
     Sigma0_disc = zeros(combs,combs)
@@ -113,7 +113,7 @@ function X2g_prior(theta0,Sigma0,FX,labeling,Wn)
         for j in 1:i
             wj = index2treatment(j,gn)
             gj = index2g(j,gn)
-            Sigma0_disc[i,j] = interact(wi,Wn,view(Xs,:,gi),labeling)' * Sigma0 * interact(wj,Wn,view(Xs,:,gj),labeling)
+            Sigma0_disc[i,j] = interact(wi,n,view(Xs,:,gi),labeling)' * Sigma0 * interact(wj,n,view(Xs,:,gj),labeling)
             Sigma0_disc[j,i] = Sigma0_disc[i,j]
         end
     end

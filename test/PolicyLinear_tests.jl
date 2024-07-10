@@ -4,13 +4,13 @@ using LinearAlgebra
 using Test
 
 @testset "RandomPolicyLinear" begin
-    Wn = 2
+    n = 2
     m = 3
     sample_std = 1.0
     labeling = [true, false, false, true, true, false, true, false, true]
     theta0 = zeros(sum(labeling))
     Sigma0 = Diagonal(ones(sum(labeling)))
-    policy = RandomPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling)
+    policy = RandomPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling)
     ContextualBandits.initialize!(policy,[],[],[])
     @test policy.model.theta_t == [0.0, 0.0, 0.0, 0.0, 0.0]
     @test policy.model.Sigma_t == Diagonal(ones(sum(labeling)))
@@ -34,13 +34,13 @@ using Test
 end
 
 @testset "GreedyPolicyLinear" begin
-    Wn = 2
+    n = 2
     m = 3
     sample_std = 1.0
     labeling = [true, false, false, true, true, false, true, false, true]
     theta0 = zeros(sum(labeling))
     Sigma0 = Diagonal(ones(sum(labeling)))
-    policy = GreedyPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling)
+    policy = GreedyPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling)
     ContextualBandits.initialize!(policy,[],[],[])
     @test policy.model.theta_t == [0.0, 0.0, 0.0, 0.0, 0.0]
     @test policy.model.Sigma_t == Diagonal(ones(sum(labeling)))

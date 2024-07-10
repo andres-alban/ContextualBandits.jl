@@ -1,21 +1,21 @@
 """
-    TS_linear(Wn, theta, Sigma, Xt, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*Wn)), rng=Random.GLOBAL_RNG)
+    TS_linear(n, theta, Sigma, Xt, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*n)), rng=Random.GLOBAL_RNG)
 
 Thonpson sampling for linear models to allocate treatment to a patient with covariates `Xt`
 using the linear model with parameters `theta` and `Sigma` and the `labeling` of the covariates.
 """
-function TS_linear(Wn, theta, Sigma, Xt, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*Wn)), rng=Random.GLOBAL_RNG)
+function TS_linear(n, theta, Sigma, Xt, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*n)), rng=Random.GLOBAL_RNG)
     Sigma_symm = Symmetric(Sigma)
     mu = randnMv(rng,theta,Sigma_symm)
-    reward = Vector{Float64}(undef,Wn)
-    for w in 1:Wn
-        reward[w] = interact(w,Wn,Xt,labeling)' * mu
+    reward = Vector{Float64}(undef,n)
+    for w in 1:n
+        reward[w] = interact(w,n,Xt,labeling)' * mu
     end
     return argmax_ties(reward,rng)
 end
 
 """
-    TTTS_linear(Wn, theta, Sigma, Xt, beta=0.5, maxiter=100, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*Wn)), rng=Random.GLOBAL_RNG)
+    TTTS_linear(n, theta, Sigma, Xt, beta=0.5, maxiter=100, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*n)), rng=Random.GLOBAL_RNG)
 
 Top-Two Thompson Sampling for linear models to allocate treatment to a patient with covariates `Xt`
 using the linear model with parameters `theta` and `Sigma` and the `labeling` of the covariates.
@@ -26,12 +26,12 @@ To prevent excessive computation time, `maxiter` is the maximum number of iterat
 
 See [Russo D (2020) Simple Bayesian algorithms for best arm identification. Operations Research 68(6)](https://doi.org/10.1287/opre.2019.1911)
 """
-function TTTS_linear(Wn, theta, Sigma, Xt, beta=0.5, maxiter=100, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*Wn)), rng=Random.GLOBAL_RNG)
+function TTTS_linear(n, theta, Sigma, Xt, beta=0.5, maxiter=100, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*n)), rng=Random.GLOBAL_RNG)
     Sigma_symm = Symmetric(Sigma)
     mu = randnMv(rng,theta,Sigma_symm)
-    reward = Vector{Float64}(undef,Wn)
-    for w in 1:Wn
-        reward[w] = interact(w,Wn,Xt,labeling)' * mu
+    reward = Vector{Float64}(undef,n)
+    for w in 1:n
+        reward[w] = interact(w,n,Xt,labeling)' * mu
     end
     I = argmax_ties(reward,rng)
 
@@ -40,8 +40,8 @@ function TTTS_linear(Wn, theta, Sigma, Xt, beta=0.5, maxiter=100, labeling=vcat(
     else
         for _ in 1:maxiter
             mu = randnMv(rng,theta,Sigma_symm)
-            for w in 1:Wn
-                reward[w] = interact(w,Wn,Xt,labeling)' * mu
+            for w in 1:n
+                reward[w] = interact(w,n,Xt,labeling)' * mu
             end
             J = argmax_ties(reward,rng)
             if (J == I)
@@ -55,7 +55,7 @@ function TTTS_linear(Wn, theta, Sigma, Xt, beta=0.5, maxiter=100, labeling=vcat(
 end
 """
     TSPolicyLinear <: PolicyLinear
-    TSPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(Wn*m)))
+    TSPolicyLinear(n, m, theta0, Sigma0, sample_std[, labeling])
 
 Allocate treatment using Thompson Sampling and update based on the linear model with labeling to make an implementation.
 """
@@ -63,21 +63,19 @@ struct TSPolicyLinear <: PolicyLinear
     model::BayesLinearRegression
 end
 
-function TSPolicyLinear(Wn, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(Wn*m)))
-    TSPolicyLinear(BayesLinearRegression(Wn, m, theta0, Sigma0, sample_std, labeling))
+function TSPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(n*m)))
+    TSPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling))
 end
 
 function allocation(policy::TSPolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
-    TS_linear(policy.model.Wn, policy.model.theta_t, policy.model.Sigma_t, Xcurrent, policy.model.labeling, rng)
+    TS_linear(policy.model.n, policy.model.theta_t, policy.model.Sigma_t, Xcurrent, policy.model.labeling, rng)
 end
 
 """
     TTTSPolicyLinear <: PolicyLinear
-    TTTSPolicyLinear(Wn, m, theta0, Sigma0, sample_std, beta, maxiter, labeling=vcat(falses(m),trues(Wn*m)))
+    TTTSPolicyLinear(n, m, theta0, Sigma0, sample_std, beta, maxiter[, labeling])
 
 Allocate treatment using Top-Two Thompson Sampling and update based on the linear model with labeling to make an implementation.
-
-See also [TTTS_linear](@ref).
 
 [Russo D (2020) Simple Bayesian algorithms for best arm identification. Operations Research 68(6)](https://doi.org/10.1287/opre.2019.1911)
 """
@@ -87,10 +85,10 @@ struct TTTSPolicyLinear <: PolicyLinear
     maxiter::Int
 end
 
-function TTTSPolicyLinear(Wn, m, theta0, Sigma0, sample_std, beta, maxiter, labeling=vcat(falses(m),trues(Wn*m)))
-    TTTSPolicyLinear(BayesLinearRegression(Wn, m, theta0, Sigma0, sample_std, labeling), beta, maxiter)
+function TTTSPolicyLinear(n, m, theta0, Sigma0, sample_std, beta, maxiter, labeling=vcat(falses(m),trues(n*m)))
+    TTTSPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), beta, maxiter)
 end
 
 function allocation(policy::TTTSPolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
-    TTTS_linear(policy.model.Wn, policy.model.theta_t, policy.model.Sigma_t, Xcurrent, policy.beta, policy.maxiter, policy.model.labeling, rng)
+    TTTS_linear(policy.model.n, policy.model.theta_t, policy.model.Sigma_t, Xcurrent, policy.beta, policy.maxiter, policy.model.labeling, rng)
 end

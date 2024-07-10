@@ -17,9 +17,9 @@ To use ordered categorical variables, use the [OrdinalDiscrete](@ref) type.
 
 # Arguments
 - `marginals::Vector{Distribution{Univariate,S} where S<:ValueSupport}`: vector of univariate distributions from the Distributions package
-- `copula`: copula type from the `DatagenCopulaBased` package
+- `copula`: copula type from the `Copulas` package
 - `intercept=true`: include an intercept term in the vector of covariates
-- `reduce_category=true`: reduce `Categorical` distributions omitting category 1 when intercept is on
+- `reduce_category=true`: omit the first dummy variable for `Categorical` covariates
 
 # Examples
 ```julia
@@ -115,14 +115,14 @@ end
 
 """
     CovariatesIndependent <: Sampleable{Multivariate,Continuous}
-    CovariatesIndependent(marginals::Array{<:Distribution{Univariate,S} where S<:ValueSupport,1},intercept=false,reduce_category=false)
+    CovariatesIndependent(marginals, intercept=true, reduce_category=true)
 
 Sampleable to randomly generate a vector of covariates using marginal distributions assuming the values are independent of each other.
 
 # Arguments
 - `marginals::Array{Distribution{Univariate,S} where S<:ValueSupport,1}`: vector of univariate distributions from the Distributions package
 - `intercept=true`: include an intercept term in the vector of covariates
-- `reduce_category=true`: reduce `Categorical` distributions omitting category 1 when intercept is on
+- `reduce_category=true`: omit the first dummy variable for `Categorical` covariates
 
 # Examples
 ```julia
@@ -271,7 +271,7 @@ this type is interpreted as ordinal by `CovariatesCopula` and `CovariatesIndepen
 > WARNING: although this type is a Distribution, I have only defined the rand and 
 > quantile functions, which are required for covariate generation.
 
-The implementation wraps a DiscreteNonParametric variable in a new structure.
+The implementation wraps a `DiscreteNonParametric` variable in a new structure.
 """
 struct OrdinalDiscrete{T<:Real,P<:Real,Ts<:AbstractVector{T},Ps<:AbstractVector{P}} <: DiscreteUnivariateDistribution
     distribution::DiscreteNonParametric{T,P,Ts,Ps}

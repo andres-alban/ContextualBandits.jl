@@ -6,20 +6,20 @@ using Test
 # Test interact function
 @testset "interact function" begin
     w = [1, 2]
-    Wn = 2
+    n = 2
     x = [1 1; 2 3; 5 4]
     labeling = Bool.([1, 1, 0, 0, 0, 1, 0, 1, 0])
     expected_output = [1.0 1.0; 2.0 3.0; 5.0 0.0; 0.0 3.0]
-    @test interact(w, Wn, x, labeling) == expected_output
+    @test interact(w, n, x, labeling) == expected_output
 
     w = w[1]
     x = x[:,1]
     expected_output = [1.0, 2.0, 5.0, 0.0]
-    @test interact(w, Wn, x, labeling) == expected_output
+    @test interact(w, n, x, labeling) == expected_output
 
     # Test interact with default labeling
     w = [1, 2]
-    Wn = 2
+    n = 2
     x = [1 1; 2 3; 5 4]
     expected_output = 
        [1.0 0.0; 
@@ -28,16 +28,16 @@ using Test
         0.0 1.0; 
         0.0 3.0;
         0.0 4.0]
-    @test interact(w, Wn, x) == expected_output
+    @test interact(w, n, x) == expected_output
 
     WX = Matrix{Float64}(undef, 6, 2)
-    interact!(WX, w, Wn, x)
+    interact!(WX, w, n, x)
     @test WX == expected_output
 
     w = w[1]
     x = x[:,1]
     expected_output = expected_output[:,1]
-    @test interact(w, Wn, x) == expected_output
+    @test interact(w, n, x) == expected_output
 end
 
 # Test BayesUpdateNormal function
@@ -97,42 +97,42 @@ end
 end
 
 @testset "labeling2predprog" begin
-    Wn = 3
+    n = 3
     m = 3
     labeling = Bool[0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0]
-    pred, prog = labeling2predprog(Wn, m, labeling)
+    pred, prog = labeling2predprog(n, m, labeling)
     @test pred == [2]
     @test prog == [[3]]
     
     labeling = Bool[0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    pred, prog = labeling2predprog(Wn, m, labeling)
+    pred, prog = labeling2predprog(n, m, labeling)
     @test pred == []
     @test prog == [[2],[3]]
     
     labeling = Bool[0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-    pred, prog = labeling2predprog(Wn, m, labeling)
+    pred, prog = labeling2predprog(n, m, labeling)
     @test pred == [2,3]
     @test prog == []
 
-    Wn = 2
+    n = 2
     m = 5
     partition = [[2,3,4],[5]]
     labeling = Bool[
         0, 1, 1, 1, 1,
         1, 1, 0, 0, 0,
         1, 0, 0, 0, 0]
-    pred, prog = labeling2predprog(Wn, m, labeling, partition)
+    pred, prog = labeling2predprog(n, m, labeling, partition)
     @test pred == [2]
     @test prog == [[3,4],[5]]
     FX = CovariatesIndependent([Categorical(ones(4)/4),Normal()])
     @test partition == covariates_partition(FX)
-    pred, prog = labeling2predprog(Wn, FX, labeling)
+    pred, prog = labeling2predprog(n, FX, labeling)
     @test pred == [2]
     @test prog == [[3,4],[5]]
 
     
     FX = CovariatesIndependent([Categorical(ones(4)/4),Normal()], false)
-    pred, prog = labeling2predprog(Wn, FX, labeling)
+    pred, prog = labeling2predprog(n, FX, labeling)
     @test pred == [1,2]
     @test prog == [[3,4],[5]]
 end

@@ -1,5 +1,5 @@
 """
-    abstract type OutcomeModel
+    OutcomeModel
 
 Supertype for models that determine mean outcomes and noisy outcomes.
 

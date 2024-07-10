@@ -1,14 +1,14 @@
 """
-    default_prior_linear(Wn,m,sigma0,psi,D,labeling=vcat(falses(m),trues(Wn*m)))
+    default_prior_linear(n,m,sigma0,psi,D,labeling=vcat(falses(m),trues(n*m)))
 
 Return the default prior (prior mean and covariance matrix) for a linear model 
-with `Wn` treatments and `m` covariates. `sigma0` is the prior standard deviation.
+with `n` treatments and `m` covariates. `sigma0` is the prior standard deviation.
 `psi` is the decay parameter for the covariance between coefficients of the same covariate.
-`D` is the symmetric distance matrix between treatments, which is of size `(Wn,Wn)`.
+`D` is the symmetric distance matrix between treatments, which is of size `(n,n)`.
 
 # Example
 ```julia
-Wn = 3
+n = 3
 m = 3
 sigma0 = 1.0
 psi = log(2)
@@ -16,13 +16,13 @@ D = [0 1 2;
     1 0 1;
     2 1 0]
 labeling = BitVector([0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0])
-theta0, Sigma0 = default_prior_linear(Wn, m, sigma0, psi, D, labeling)
+theta0, Sigma0 = default_prior_linear(n, m, sigma0, psi, D, labeling)
 ```
 """
-function default_prior_linear(Wn,m,sigma0,psi,D,labeling=vcat(falses(m),trues(Wn*m)))
-    size(D) == (Wn,Wn) || throw(ArgumentError("The distance matrix D must be of dimension (Wn,Wn) = ($(Wn),$(Wn)) instead of $(size(D))"))
+function default_prior_linear(n,m,sigma0,psi,D,labeling=vcat(falses(m),trues(n*m)))
+    size(D) == (n,n) || throw(ArgumentError("The distance matrix D must be of dimension (n,n) = ($(n),$(n)) instead of $(size(D))"))
     issymmetric(D) || throw(ArgumentError("The distance matrix D must be symmetric"))
-    length(labeling) == (Wn+1)*m || throw(DomainError(labeling,"`labeling` must have length `(Wn+1)*m`."))
+    length(labeling) == (n+1)*m || throw(DomainError(labeling,"`labeling` must have length `(n+1)*m`."))
     d = sum(labeling)
     theta0 = zeros(d)
     Sigma0 = zeros(d,d)
@@ -44,12 +44,12 @@ function default_prior_linear(Wn,m,sigma0,psi,D,labeling=vcat(falses(m),trues(Wn
 end
 
 """
-    robustify_prior_linear!(theta, Sigma, Wn, m, labeling=vcat(falses(m),trues(Wn*m)), z_alpha=2, c=4)
+    robustify_prior_linear!(theta, Sigma, n, m, labeling=vcat(falses(m),trues(n*m)), z_alpha=2, c=4)
 
-Robustify the prior mean `theta` and covariance matrix `Sigma` for a linear model with `Wn` treatments and `m` covariates.
+Robustify the prior mean `theta` and covariance matrix `Sigma` for a linear model with `n` treatments and `m` covariates.
 """
-function robustify_prior_linear!(theta, Sigma, Wn, m, labeling=vcat(falses(m),trues(Wn*m)), z_alpha=2, c=4)
-    length(labeling) == (Wn+1)*m || throw(DomainError(labeling,"`labeling` must have length `(Wn+1)*m`."))
+function robustify_prior_linear!(theta, Sigma, n, m, labeling=vcat(falses(m),trues(n*m)), z_alpha=2, c=4)
+    length(labeling) == (n+1)*m || throw(DomainError(labeling,"`labeling` must have length `(n+1)*m`."))
     d = sum(labeling)
     length(theta) == d || throw(DomainError(theta0,"`theta0` must be of length `sum(labeling)`."))
     size(Sigma) == (d,d) || throw(DomainError(Sigma0,"`Sigma0` must be of dimensions `sum(labeling)`."))

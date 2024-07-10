@@ -1,5 +1,5 @@
 """
-    abstract type Policy
+    Policy
 
 Supertype for contextual bandit policies.
 
@@ -9,7 +9,7 @@ take subtypes of `Policy` as the first argument. Each subtype of Policy should i
 abstract type Policy end
 
 """
-    initialize!(policy::Policy,W,X,Y)
+    initialize!(policy::Policy[, W, X, Y])
 
 Initialize the state of a policy before a trial starts. `W`, `X`, and `Y` is data
 collected in a pilot that can be used to initialize the policy. 
@@ -19,7 +19,7 @@ function initialize!(policy::Policy,W=Int[],X=Float64[],Y=Float64[])
 end
 
 """
-    state_update!(policy::Policy,W,X,Y,rng=Random.GLOBAL_RNG)
+    state_update!(policy::Policy,W,X,Y[, rng])
 
 Update the state of a policy given the data `W`, `X`, and `Y`. `W` is the vector of treatments, `X` is the matrix of covariates, and `Y` is the vector of outcomes.
 
@@ -29,7 +29,7 @@ function state_update!(policy::Policy,W,X,Y,rng=Random.GLOBAL_RNG)
 end
 
 """
-    allocation(policy::Policy,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
+    allocation(policy::Policy,Xcurrent,W,X,Y[, rng])
 
 Return a treatment to allocate a patient with covariates `Xcurrent`, given that the trial has observed `W`, `X`, and `Y`.
 `W` is the vector of treatments, `X` is the matrix of covariates, and `Y` is the vector of outcomes.
@@ -79,18 +79,18 @@ end
 # Some triavial policies
 
 struct RandomPolicy <: Policy
-    Wn::Int
+    n::Int
 end
 
 function allocation(policy::RandomPolicy,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
-    return rand(rng,1:policy.Wn)
+    return rand(rng,1:policy.n)
 end
 
 
 struct RoundRobinPolicy <: Policy
-    Wn::Int
+    n::Int
 end
 
 function allocation(policy::RoundRobinPolicy,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
-    return (length(W) % policy.Wn) + 1
+    return (length(W) % policy.n) + 1
 end

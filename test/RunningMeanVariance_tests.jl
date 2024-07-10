@@ -22,9 +22,9 @@ using Test
     @test isnan(std(agg))
     @test isnan(ContextualBandits.mean_stderr(agg))
 
-    n = 1000
-    breaks = Int.([floor(0.1*n),floor(0.7*n)])
-    x = rand(n)
+    N = 1000
+    breaks = Int.([floor(0.1*N),floor(0.7*N)])
+    x = rand(N)
     agg1 = ContextualBandits.RunningMeanVariance{Float64}()
     agg2 = ContextualBandits.RunningMeanVariance{Float64}()
     agg3 = ContextualBandits.RunningMeanVariance{Float64}()
@@ -34,7 +34,7 @@ using Test
     for i in breaks[1]+1:breaks[2]
         ContextualBandits.update!(agg2,x[i])
     end
-    for i in breaks[2]+1:n
+    for i in breaks[2]+1:N
         ContextualBandits.update!(agg3,x[i])
     end
     ContextualBandits.update!(agg1,agg2)

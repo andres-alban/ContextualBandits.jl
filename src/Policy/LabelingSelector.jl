@@ -13,7 +13,7 @@ Select a labeling based on the vector of treatments `W`, covariates matrix `X`,
 and vector of outcomes `Y`.
 """
 function labeling_selection(selection::LabelingSelector,W,X,Y,rng=Random.GLOBAL_RNG)
-    return vcat(falses(selection.m),trues(selection.Wn*selection.m))
+    return vcat(falses(selection.m),trues(selection.n*selection.m))
 end
 
 """
@@ -27,7 +27,7 @@ end
 
 """
     LassoCVLabelingSelector <: LabelingSelector
-    LassoCVLabelingSelector(Wn,m,factor=0.0 [,labeling_base])
+    LassoCVLabelingSelector(n,m,factor=0.0 [,labeling_base])
 
 Labeling selector that uses Lasso with cross validation to select a labeling.
 The `factor` parameter is used to select the best model from cross validation:
@@ -35,25 +35,25 @@ The `factor` parameter is used to select the best model from cross validation:
 `factor > 0` selects the model with the lowest mean loss that is within `factor` standard erros of the best model. `labeling_base` is the initial labeling to use.
 """
 struct LassoCVLabelingSelector <: LabelingSelector
-    Wn::Int
+    n::Int
     m::Int
     factor::Float64
     labeling_base::BitVector
-    function LassoCVLabelingSelector(Wn,m,factor=0.0,labeling_base=falses(0))
+    function LassoCVLabelingSelector(n,m,factor=0.0,labeling_base=falses(0))
         factor = abs(factor)
         if isempty(labeling_base)
-            labeling_base = trues((Wn+1)*m)
+            labeling_base = trues((n+1)*m)
         else
-            (Wn+1)*m == length(labeling_base) || throw(ArgumentError("labeling_base is the wrong length: expected length=$((Wn+1)*m) vs. actual length=$(length(labeling_base))")) 
+            (n+1)*m == length(labeling_base) || throw(ArgumentError("labeling_base is the wrong length: expected length=$((n+1)*m) vs. actual length=$(length(labeling_base))")) 
         end
-        new(Wn,m,factor,labeling_base)
+        new(n,m,factor,labeling_base)
     end
 end
 
 function labeling_selection(selection::LassoCVLabelingSelector,W,X,Y,rng=Random.GLOBAL_RNG)
     labeling = copy(selection.labeling_base)
     labeling[1] = false # skip the intercept term because glmnet includes it automatically
-    WX = interact(W,selection.Wn,X,labeling)
+    WX = interact(W,selection.n,X,labeling)
     cv = nothing
     try
         cv = glmnetcv(WX', Y, rng=rng)

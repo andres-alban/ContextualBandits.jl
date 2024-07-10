@@ -1,14 +1,14 @@
 """
-    simulation_stochastic_internal(FX, FXtilde, Wn, T, delay, policies, outcome_model;
-        reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,
-        Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
+    simulation_stochastic_internal(FX, FXtilde, n, T, delay, policies, outcome_model,
+    reps, post_reps, recorder, aggregators, pilot_samples_per_treatment,
+    Xinterest, rng, verbose)
 
 Simulate trials and record metrics. This function is not intended to be called directly,
 but rather through [simulation_stochastic](@ref) and [simulation_stochastic_parallel](@ref).
 """
-function simulation_stochastic_internal(FX, FXtilde, Wn, T, delay, policies, outcome_model;
-    reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,
-    Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
+function simulation_stochastic_internal(FX, FXtilde, n, T, delay, policies, outcome_model,
+    reps, post_reps, recorder, aggregators, pilot_samples_per_treatment,
+    Xinterest, rng, verbose)
 
     @assert length(FX) == length(FXtilde)
 
@@ -19,14 +19,14 @@ function simulation_stochastic_internal(FX, FXtilde, Wn, T, delay, policies, out
         false, ones(post_reps)./post_reps, Matrix{Float64}(undef,length(FXtilde),post_reps)
     end
 
-    initialize!(recorder, T, Wn, length(FX), delay, size(X_post,2), weights, size(Xinterest,2))
+    initialize!(recorder, T, n, length(FX), delay, size(X_post,2), weights, size(Xinterest,2))
     if isnothing(aggregators)
         aggregators = [StandardResultsAggregator(output_recorder(recorder),output_recorder_names(recorder)) for _ in policies]
     end
 
-    Wpilot = repeat(1:Wn,pilot_samples_per_treatment)
-    Xpilot = Matrix{Float64}(undef, length(FX), pilot_samples_per_treatment*Wn)
-    Ypilot = Vector{Float64}(undef, pilot_samples_per_treatment*Wn)
+    Wpilot = repeat(1:n,pilot_samples_per_treatment)
+    Xpilot = Matrix{Float64}(undef, length(FX), pilot_samples_per_treatment*n)
+    Ypilot = Vector{Float64}(undef, pilot_samples_per_treatment*n)
 
     for i in 1:reps
         rand!(rng,FX,X)
@@ -43,7 +43,7 @@ function simulation_stochastic_internal(FX, FXtilde, Wn, T, delay, policies, out
         for (ip,policy) in enumerate(policies)
             initialize!(policy,Wpilot,Xpilot,Ypilot)
             reset!(recorder,outcome_model,X_post,Xinterest)
-            out = replication_stochastic(X,X_post,Z,Wn,delay,policy,outcome_model,recorder;Xinterest=Xinterest,X_post_weights=weights,rng=copy(rng_policy))
+            out = replication_stochastic(X,X_post,Z,n,delay,policy,outcome_model,recorder;Xinterest=Xinterest,X_post_weights=weights,rng=copy(rng_policy))
             update!(aggregators[ip], out)
         end
         if verbose && (i % 100 == 0)
@@ -81,34 +81,35 @@ function finite_groups(FXtilde,post_reps)
 end
 
 """
-    simulation_stochastic(FX, FXtilde, Wn, T, delay, policies, outcome_model;
-        reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0, Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
+    simulation_stochastic(reps, FX, n, T, policies, outcome_model;
+        FXtilde=FX, delay=0, post_reps=0, pilot_samples_per_treatment = 0,
+        Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
 
 Simulate trials and record metrics.
 
 # Arguments
-- `FX`: Covariates generator for in-trial covariates (e.g., [CovariatesIndependent](@ref) or [CovariatesCopula](@ref)).
-- `FXtilde`: Covariates generator for post-trial covariates (e.g., [CovariatesIndependent](@ref) or [CovariatesCopula](@ref)).
-- `Wn`: Number of treatments.
-- `T`: Number of patients in the trial (sample size).
-- `delay`: Delay in observing outcomes.
-- `policies`: Dictionary of policies to simulate. The keys are the names of the policies and the values are the policies themselves.
-- `outcome_model`: the model that generates the outcomes (e.g., [LinearOutcomeLabelRandom](@ref)).
 - `reps`: Number of replications.
+- `FX`: Covariates generator for in-trial covariates (e.g., [CovariatesIndependent](@ref) or [CovariatesCopula](@ref)).
+- `n`: Number of treatments.
+- `T`: Number of patients in the trial (sample size).
+- `policies`: Dictionary of policies to simulate. The keys are the names of the policies and the values are the policies themselves.
+- `outcome_model`: the model that generates the outcomes (e.g., [OutcomeLinear](@ref)).
+
+# Optional arguments
+- `FXtilde`: Covariates generator for post-trial covariates (e.g., [CovariatesIndependent](@ref) or [CovariatesCopula](@ref)).
+- `delay`: Delay in observing outcomes.
 - `post_reps`: Number of replications for post-trial covariates.
-- `recorder`: Recorder to store the metrics. Default is [StandardRecorder](@ref). Advanced users can create their own recorders.
-- `aggregators`: Aggregators to summarize the metrics from recorder. Default is `nothing`, 
-which means that a [StandardResultsAggregator](@ref) will be created for each policy. StandardResultsAggregator stores the mean and standard deviation of the metrics.
 - `pilot_samples_per_treatment`: Number of pilot samples per treatment to build a prior distribution before the start of the trial. Default is 0.
 - `Xinterest`: Covariates of interest for which specific . Default is an empty matrix.
 - `rng`: Random number generator. Default is `Random.GLOBAL_RNG`.
 - `verbose`: Print progress of the simulation. Default is `false`.
 
 # Returns
-A dictionary with the input arguments and the output of the simulation for each policy. The output of the simulation depends on the recorder and aggregator.
+A dictionary with the input arguments and the output of the simulation for each policy.
 """
-function simulation_stochastic(FX, FXtilde, Wn, T, delay, policies, outcome_model;
-    reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,
+function simulation_stochastic(reps, FX, n, T, policies, outcome_model;
+    FXtilde=FX, delay=0,
+    post_reps=0, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,
     Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
 
     policy_labels = try
@@ -118,23 +119,24 @@ function simulation_stochastic(FX, FXtilde, Wn, T, delay, policies, outcome_mode
     end
     policy_values = collect(values(policies))
 
-    aggregators = simulation_stochastic_internal(FX, FXtilde, Wn, T, delay, policy_values, outcome_model;
-    reps=reps, post_reps=post_reps, recorder=recorder, aggregators=aggregators, pilot_samples_per_treatment = pilot_samples_per_treatment,
-    Xinterest=Xinterest, rng=rng, verbose=verbose)
+    aggregators = simulation_stochastic_internal(FX, FXtilde, n, T, delay, policy_values, outcome_model,
+        reps, post_reps, recorder, aggregators, pilot_samples_per_treatment,
+        Xinterest, rng, verbose)
 
     output = Dict(policy_labels[i] => asdict(aggregators[i]) for i in eachindex(policy_labels))
 
     return Dict(
         "input" => Dict("reps" => reps, "T" => T, "delay" => delay, "Xinterest" => Xinterest,
-            "FX" => FX, "FXtilde" => FXtilde, "Wn" => Wn, "policies" => policies, "outcome_model" => outcome_model,
+            "FX" => FX, "FXtilde" => FXtilde, "n" => n, "policies" => policies, "outcome_model" => outcome_model,
             "pilot_samples_per_treatment" => pilot_samples_per_treatment),
         "output" => output
     )
 end
 
 """
-    simulation_stochastic_parallel(FX, FXtilde, Wn, T, delay, policies, outcome_model;
-        reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0, Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
+    simulation_stochastic_parallel(reps, FX, n, T, policies, outcome_model;
+        FXtilde=FX, delay=0, post_reps=0, pilot_samples_per_treatment = 0,
+        Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
 
 Parallel version of [simulation_stochastic](@ref). The simulation is distributed among all available workers.
 
@@ -146,11 +148,12 @@ addprocs(2)
 # ...
 # generate all the input arguments for the function
 # ...
-results = simulation_stochastic_parallel(FX, FXtilde, Wn, T, delay, policies, outcome_model)
+results = simulation_stochastic_parallel(FX, n, T, policies, outcome_model)
 ```
 """
-function simulation_stochastic_parallel(FX, FXtilde, Wn, T, delay, policies, outcome_model;
-    reps=100, post_reps=100, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,
+function simulation_stochastic_parallel(reps, FX, n, T, policies, outcome_model;
+    FXtilde=FX, delay=0,
+    post_reps=0, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,
     Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
 
     policy_labels = try
@@ -168,9 +171,9 @@ function simulation_stochastic_parallel(FX, FXtilde, Wn, T, delay, policies, out
     for (i,w) in enumerate(wrkrs)
         rng = randjump(rng, big(10)^20)
         repsworker = reps_per_worker + (rem_reps > 0)
-        futures[i] = @spawnat w simulation_stochastic_internal(FX, FXtilde, Wn, T, delay, policy_values, outcome_model;
-            reps=repsworker, post_reps=post_reps, recorder=recorder, aggregators=aggregators, pilot_samples_per_treatment = pilot_samples_per_treatment,
-            Xinterest=Xinterest, rng=rng, verbose=verbose)
+        futures[i] = @spawnat w simulation_stochastic_internal(FX, FXtilde, n, T, delay, policy_values, outcome_model,
+            repsworker, post_reps, recorder, aggregators, pilot_samples_per_treatment,
+            Xinterest, rng, verbose)
         rem_reps -= 1
     end
 
@@ -190,7 +193,7 @@ function simulation_stochastic_parallel(FX, FXtilde, Wn, T, delay, policies, out
 
     return Dict(
         "input" => Dict("reps" => reps, "T" => T, "delay" => delay, "Xinterest" => Xinterest,
-            "FX" => FX, "FXtilde" => FXtilde, "Wn" => Wn, "policies" => policies, "outcome_model" => outcome_model,
+            "FX" => FX, "FXtilde" => FXtilde, "n" => n, "policies" => policies, "outcome_model" => outcome_model,
             "pilot_samples_per_treatment" => pilot_samples_per_treatment),
         "output" => output
     )

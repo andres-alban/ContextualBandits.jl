@@ -1,24 +1,24 @@
 """
-    biasedcoin_score(Xcurrent, W, X, Wn, partition=1:size(Xcurrent,1), weights=ones(length(partition)+2), target_fraction = ones(Wn) / Wn)
+    biasedcoin_score(Xcurrent, W, X, n, partition=1:size(Xcurrent,1), weights=ones(length(partition)+2), target_fraction = ones(n) / n)
 
 Calculate the score for the biased coin policy. The score measures the distance
 to a balanced allocation of the treatments.
 """
-function biasedcoin_score(Xcurrent, W, X, Wn, partition=[[i] for i in 2:size(Xcurrent,1)], weights=ones(length(partition)+2), target_fraction = ones(Wn) / Wn)
-    counts = [sum(W .== w) for w in 1:Wn]
+function biasedcoin_score(Xcurrent, W, X, n, partition=[[i] for i in 2:size(Xcurrent,1)], weights=ones(length(partition)+2), target_fraction = ones(n) / n)
+    counts = [sum(W .== w) for w in 1:n]
 
 
     d_overall = distance_squared_from_counts(counts, target_fraction)
 
     # Marginal distance
-    d_marginal = zeros(length(partition), Wn)
+    d_marginal = zeros(length(partition), n)
     for i in eachindex(partition)
         # x_{i,j,k} from Pocock and Simon 1975
         # i is the covariate
         # j are the possible levels of the covariate
-        # k is the treatment: k=1:Wn
+        # k is the treatment: k=1:n
         Xcovariate = view(X,partition[i],:)
-        xijk = zeros(Int,Wn)
+        xijk = zeros(Int,n)
         for patient in axes(Xcovariate,2)
             if Xcovariate[:,patient] == Xcurrent[partition[i]]
                 xijk[W[patient]] += 1
@@ -29,7 +29,7 @@ function biasedcoin_score(Xcurrent, W, X, Wn, partition=[[i] for i in 2:size(Xcu
     end
 
     # in-stratum distance
-    xijk = zeros(Int,Wn)
+    xijk = zeros(Int,n)
     for patient in axes(X,2)
         instratum = true
         for i in eachindex(partition)
@@ -45,8 +45,8 @@ function biasedcoin_score(Xcurrent, W, X, Wn, partition=[[i] for i in 2:size(Xcu
     d_stratum = distance_squared_from_counts(xijk, target_fraction)
 
     # Gk is a weighted sum of the distances
-    Gk = zeros(Wn)
-    for k in 1:Wn
+    Gk = zeros(n)
+    for k in 1:n
         d = vcat(d_overall[k], d_marginal[:,k], d_stratum[k])
         Gk[k] = sum(d .* weights)
     end
@@ -73,15 +73,15 @@ end
 
 """
     BiasedCoinPolicyLinear <: PolicyLinear
-    BiasedCoinPolicyLinear(Wn, m, theta0, Sigma0, sample_std, predictive, prognostic, labeling=vcat(falses(m),trues(Wn*m)); p=vcat(0.5, 0.5*ones(Wn-1)/(Wn-1)), weights=vcat(0.0,ones(length(prognostic))/length(prognostic),0.0), target_fraction=ones(Wn)/Wn)
-    BiasedCoinPolicyLinear(Wn, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula,CovariatesIndependent}, labeling=vcat(falses(m),trues(Wn*m)); p=vcat(0.5, 0.5*ones(Wn-1)/(Wn-1)), weights=nothing, target_fraction=ones(Wn)/Wn)
+    BiasedCoinPolicyLinear(n, m, theta0, Sigma0, sample_std, predictive, prognostic, labeling=vcat(falses(m),trues(n*m)); p=vcat(0.5, 0.5*ones(n-1)/(n-1)), weights=vcat(0.0,ones(length(prognostic))/length(prognostic),0.0), target_fraction=ones(n)/n)
+    BiasedCoinPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula,CovariatesIndependent}, labeling=vcat(falses(m),trues(n*m)); p=vcat(0.5, 0.5*ones(n-1)/(n-1)), weights=nothing, target_fraction=ones(n)/n)
 
 A policy that allocates treatments according to a biased coin design and implements
 using a linear model with a labeling.
 
 See [Zhao, W., Ma, W., Wang, F., & Hu, F. (2022). Incorporating covariates information in adaptive clinical trials for precision medicine. Pharmaceutical Statistics, 21(1), 176-195.](https://doi.org/10.1002/pst.2160)
 for the measure of the score. However, this policy allocates using a fixed `target_fraction`,
-instead of a response-adaptive allocation. See [RABC_OCBA_PolicyLinear](@ref) for a response-adaptive
+instead of a response-adaptive allocation. See [`RABC_OCBA_PolicyLinear`](@ref) for a response-adaptive
 version of this policy.
 """
 struct BiasedCoinPolicyLinear <: PolicyLinear
@@ -105,24 +105,24 @@ struct BiasedCoinPolicyLinear <: PolicyLinear
     end
 end
 
-function BiasedCoinPolicyLinear(Wn, m, theta0, Sigma0, sample_std, predictive, prognostic, labeling=vcat(falses(m),trues(Wn*m)); p=vcat(0.5, 0.5*ones(Wn-1)/(Wn-1)), weights=vcat(0.0,ones(length(prognostic))/length(prognostic),0.0), target_fraction=ones(Wn)/Wn)
-    BiasedCoinPolicyLinear(BayesLinearRegression(Wn, m, theta0, Sigma0, sample_std, labeling), predictive, prognostic, p, weights, target_fraction)
+function BiasedCoinPolicyLinear(n, m, theta0, Sigma0, sample_std, predictive, prognostic, labeling=vcat(falses(m),trues(n*m)); p=vcat(0.5, 0.5*ones(n-1)/(n-1)), weights=vcat(0.0,ones(length(prognostic))/length(prognostic),0.0), target_fraction=ones(n)/n)
+    BiasedCoinPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), predictive, prognostic, p, weights, target_fraction)
 end
 
-function BiasedCoinPolicyLinear(Wn, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula,CovariatesIndependent}, labeling=vcat(falses(m),trues(Wn*m)); p=vcat(0.5, 0.5*ones(Wn-1)/(Wn-1)), weights=nothing, target_fraction=ones(Wn)/Wn)
+function BiasedCoinPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula,CovariatesIndependent}, labeling=vcat(falses(m),trues(n*m)); p=vcat(0.5, 0.5*ones(n-1)/(n-1)), weights=nothing, target_fraction=ones(n)/n)
     length(FX) == m || throw(ArgumentError("length of FX must be equal to m"))
-    predictive, prognostic = labeling2predprog(Wn, FX, labeling)
+    predictive, prognostic = labeling2predprog(n, FX, labeling)
     if isnothing(weights)
         weights = vcat(0.0,ones(length(prognostic))/length(prognostic),0.0)
     end
-    BiasedCoinPolicyLinear(BayesLinearRegression(Wn, m, theta0, Sigma0, sample_std, labeling), predictive, prognostic, p, weights, target_fraction)
+    BiasedCoinPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), predictive, prognostic, p, weights, target_fraction)
 end
 
 function allocation(policy::BiasedCoinPolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
     index_subgroup = [view(X, policy.predictive,i) == view(Xcurrent, policy.predictive) for i in axes(X,2)]
     W_subgroup = view(W, index_subgroup)
     X_subgroup = view(X, :, index_subgroup)
-    score = biasedcoin_score(Xcurrent, W_subgroup, X_subgroup, policy.model.Wn, policy.prognostic, policy.weights, policy.target_fraction)
+    score = biasedcoin_score(Xcurrent, W_subgroup, X_subgroup, policy.model.n, policy.prognostic, policy.weights, policy.target_fraction)
     treatment_order = sortperm(score, lt=(a,b) -> isless_ties(a,b,rng))
     return treatment_order[rand(rng, Categorical(policy.p))]
 end
@@ -136,8 +136,8 @@ end
 
 """
     RABC_OCBA_PolicyLinear <: PolicyLinear
-    RABC_OCBA_PolicyLinear(Wn, m, theta0, Sigma0, sample_std, predictive, prognostic, labeling=vcat(falses(m),trues(Wn*m)); p=vcat(0.5, 0.5*ones(Wn-1)/(Wn-1)), weights=vcat(0.0,ones(length(prognostic))/length(prognostic),0.0))
-    RABC_OCBA_PolicyLinear(Wn, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula,CovariatesIndependent}, labeling=vcat(falses(m),trues(Wn*m)); p=vcat(0.5, 0.5*ones(Wn-1)/(Wn-1)), weights=nothing)
+    RABC_OCBA_PolicyLinear(n, m, theta0, Sigma0, sample_std, predictive, prognostic, labeling=vcat(falses(m),trues(n*m)); p=vcat(0.5, 0.5*ones(n-1)/(n-1)), weights=vcat(0.0,ones(length(prognostic))/length(prognostic),0.0))
+    RABC_OCBA_PolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula,CovariatesIndependent}, labeling=vcat(falses(m),trues(n*m)); p=vcat(0.5, 0.5*ones(n-1)/(n-1)), weights=nothing)
 
 Reasponse-Adaptive Biased Coin (RABC) using OCBA for the target fraction.
 A policy that allocates treatments according to a response-adative biased coin design
@@ -149,7 +149,7 @@ for the measure of the score.
 
 See [BiasedCoinPolicyLinear](@ref) for a non-response-adaptive version of this policy.
 
-See [OCBA_PolicyLinear](@ref) for the OCBA policy without biased coin.
+See [OCBAPolicyLinear](@ref) for the OCBA policy without biased coin.
 
 """
 struct RABC_OCBA_PolicyLinear <: PolicyLinear
@@ -171,17 +171,17 @@ struct RABC_OCBA_PolicyLinear <: PolicyLinear
     end
 end
 
-function RABC_OCBA_PolicyLinear(Wn, m, theta0, Sigma0, sample_std, predictive, prognostic, labeling=vcat(falses(m),trues(Wn*m)); p=vcat(0.5, 0.5*ones(Wn-1)/(Wn-1)), weights=vcat(0.0,ones(length(prognostic))/length(prognostic),0.0))
-    RABC_OCBA_PolicyLinear(BayesLinearRegression(Wn, m, theta0, Sigma0, sample_std, labeling), predictive, prognostic, p, weights)
+function RABC_OCBA_PolicyLinear(n, m, theta0, Sigma0, sample_std, predictive, prognostic, labeling=vcat(falses(m),trues(n*m)); p=vcat(0.5, 0.5*ones(n-1)/(n-1)), weights=vcat(0.0,ones(length(prognostic))/length(prognostic),0.0))
+    RABC_OCBA_PolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), predictive, prognostic, p, weights)
 end
 
-function RABC_OCBA_PolicyLinear(Wn, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula,CovariatesIndependent}, labeling=vcat(falses(m),trues(Wn*m)); p=vcat(0.5, 0.5*ones(Wn-1)/(Wn-1)), weights=nothing)
+function RABC_OCBA_PolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula,CovariatesIndependent}, labeling=vcat(falses(m),trues(n*m)); p=vcat(0.5, 0.5*ones(n-1)/(n-1)), weights=nothing)
     length(FX) == m || throw(ArgumentError("length of FX must be equal to m"))
-    predictive, prognostic = labeling2predprog(Wn, FX, labeling)
+    predictive, prognostic = labeling2predprog(n, FX, labeling)
     if isnothing(weights)
         weights = vcat(0.0,ones(length(prognostic))/length(prognostic),0.0)
     end
-    RABC_OCBA_PolicyLinear(BayesLinearRegression(Wn, m, theta0, Sigma0, sample_std, labeling), predictive, prognostic, p, weights)
+    RABC_OCBA_PolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), predictive, prognostic, p, weights)
 end
 
 function allocation(policy::RABC_OCBA_PolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
@@ -190,7 +190,7 @@ function allocation(policy::RABC_OCBA_PolicyLinear,Xcurrent,W,X,Y,rng=Random.GLO
     X_subgroup = view(X, :, index_subgroup)
 
     # Get the target fraction from OCBA
-    p = [sum(W_subgroup .== w) for w in 1:policy.model.Wn]
+    p = [sum(W_subgroup .== w) for w in 1:policy.model.n]
     unobserved_treatments = findall(p .== 0)
     if length(unobserved_treatments) == 1
         return unobserved_treatments[1]
@@ -198,7 +198,7 @@ function allocation(policy::RABC_OCBA_PolicyLinear,Xcurrent,W,X,Y,rng=Random.GLO
         return rand(rng,unobserved_treatments)
     end
     p /= length(W_subgroup)
-    means = [interact(iw,policy.model.Wn,Xcurrent, policy.model.labeling)' * policy.model.theta_t for iw in 1:policy.model.Wn]
+    means = [interact(iw,policy.model.n,Xcurrent, policy.model.labeling)' * policy.model.theta_t for iw in 1:policy.model.n]
     # Before computing the OCBA probabilities, we would like to identify the alternatives 
     # that are equivalent in the sense that they are perfectly correlated and 
     # have the same mean and variance. For simplicity, here we assume that arms
@@ -208,9 +208,9 @@ function allocation(policy::RABC_OCBA_PolicyLinear,Xcurrent,W,X,Y,rng=Random.GLO
     means,m,c = unique_values_helper(means)
     vars = ones(length(means)) * policy.model.sample_std^2
     p_ocba = ocba_normal(means,vars)
-    target_fraction = [p_ocba[m[i]]/c[i] for i in 1:policy.model.Wn]
+    target_fraction = [p_ocba[m[i]]/c[i] for i in 1:policy.model.n]
 
-    score = biasedcoin_score(Xcurrent, W_subgroup, X_subgroup, policy.model.Wn, policy.prognostic, policy.weights, target_fraction)
+    score = biasedcoin_score(Xcurrent, W_subgroup, X_subgroup, policy.model.n, policy.prognostic, policy.weights, target_fraction)
     treatment_order = sortperm(score, lt=(a,b) -> isless_ties(a,b,rng))
     return treatment_order[rand(rng, Categorical(policy.p))]
 end

@@ -5,7 +5,7 @@ using LinearAlgebra
 using Test
 
 @testset "OCBA policy" begin
-    Wn = 3
+    n = 3
     FX = CovariatesIndependent([Categorical(1/2,1/2), Uniform(0,1)])
     m = length(FX)
     labeling=[false, false, true, true, true, false, true, true, false, true, true, false]
@@ -13,14 +13,14 @@ using Test
     Sigma0 = Diagonal(ones(sum(labeling)))
     sample_std = 1.0
     predictive = [2]
-    policy = OCBAPolicyLinear(Wn, m, theta0, Sigma0, sample_std, predictive, labeling)
+    policy = OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, predictive, labeling)
     ContextualBandits.initialize!(policy)
     @test policy.model.theta_t == theta0
     @test policy.model.Sigma_t == Sigma0
     rng = MersenneTwister(1234)
     Xcurrent = rand(rng, FX)
     X = rand(rng, FX, 20)
-    W = rand(rng, 1:Wn, 20)
+    W = rand(rng, 1:n, 20)
     Y = randn(rng, 20)
     for i in eachindex(Y)
         ContextualBandits.state_update!(policy, W[1:i], view(X,:,1:i), Y[1:i])
