@@ -81,7 +81,7 @@ using a linear model with a labeling.
 
 See [Zhao, W., Ma, W., Wang, F., & Hu, F. (2022). Incorporating covariates information in adaptive clinical trials for precision medicine. Pharmaceutical Statistics, 21(1), 176-195.](https://doi.org/10.1002/pst.2160)
 for the measure of the score. However, this policy allocates using a fixed `target_fraction`,
-instead of a response-adaptive allocation. See [RABC_OCBA_PolicyLinear](@ref) for a response-adaptive
+instead of a response-adaptive allocation. See [`RABC_OCBA_PolicyLinear`](@ref) for a response-adaptive
 version of this policy.
 """
 struct BiasedCoinPolicyLinear <: PolicyLinear
@@ -149,7 +149,7 @@ for the measure of the score.
 
 See [BiasedCoinPolicyLinear](@ref) for a non-response-adaptive version of this policy.
 
-See [OCBA_PolicyLinear](@ref) for the OCBA policy without biased coin.
+See [OCBAPolicyLinear](@ref) for the OCBA policy without biased coin.
 
 """
 struct RABC_OCBA_PolicyLinear <: PolicyLinear

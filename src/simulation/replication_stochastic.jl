@@ -22,7 +22,7 @@ function replication_stochastic(X,X_post,Z,n,delay,policy,outcome_model,recorder
         # Allocate
         if 1 <= t <= T
             w = allocation(policy,Xcurrent,view(W,1:(t-1)),view(X,:,1:(t-1)),view(Y,1:(t-delay-1)),rng)
-            @assert w in 1:n "The policy made an allocation outside the range 1-$n"
+            @assert w in 1:n "The policy $(typeof(policy)) made an allocation outside the range 1-$n"
             W[t] = w
             Y[t] = noisy_outcome(outcome_model,w,view(X,:,t),Z[t])
         end

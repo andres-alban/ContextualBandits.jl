@@ -7,6 +7,23 @@ function treatmentFromIndex(i,m)
     return (i-1) ÷ m
 end
 
+function indexFromLabeling(i, labeling)
+    for j in eachindex(labeling)
+        if labeling[j]
+            i -= 1
+            if i == 0
+                return j
+            end
+        end
+    end
+    return 0
+end
+
+function treatmentFromIndex(i,m, labeling)
+    index = indexFromLabeling(i, labeling)
+    return treatmentFromIndex(index,m)
+end
+
 """
     covariateFromIndex(i,m)
 
@@ -14,6 +31,11 @@ Return the covariate from the index (position) `i` and the number of covariates 
 """
 function covariateFromIndex(i,m)
     return ((i-1) % m) + 1
+end
+
+function covariateFromIndex(i,m, labeling)
+    index = indexFromLabeling(i, labeling)
+    return covariateFromIndex(index,m)
 end
 
 """
@@ -25,23 +47,56 @@ function indexFromTreatmentCovariate(w,j,m)
     return w*m + j
 end
 
+function indexFromTreatmentCovariate(w,j,m,labeling)
+    index = indexFromTreatmentCovariate(w,j,m)
+    if labeling[index]
+        return sum(labeling[1:index])
+    else
+        return 0
+    end
+end
+
 """
-    interact(w,n,x,labeling)
+    interact(w, n, x[, labeling])
 
-Interact a treatment index `w` among `n` treatment alternatives with covariates `x`, where the coefficients labeled by `labeling` are active.
+Interact a treatment `w` among `n` treatment alternatives with covariate vector `x` (`m=length(x)`).
 
-The output is a matrix with `sum(labeling)` rows and `length(w)` columns.
+When labeling is not provided, the function returns a vector `WX` of length `m*n`,
+where all entries are zeros except for `WX[(w-1)*m+1:w*m] = x`. `WX` is split into
+`n` blocks of size `m`, where the `w`-th block is equal to `x`.
+
+When `labeling` is provided, the function returns a vector `WX` of length `sum(labeling)`.
+`labeling` is a boolean vector of length `(n+1)*m` that indicates which covariates are predictive
+and which are prognostic. The first `m` entries correspond to prognostic terms,
+the following `m` entries correspond to the terms predictive with respect to treatment 1, then `m` entries for treatment 2, and so on.
+
+If `w` is a vector, then `x` must be a matrix such that `length(w)==size(x,2)`,
+and the output is a matrix with `sum(labeling)` rows and `length(w)` columns.
 
 See also: [`interact!`](@ref)
 
 #Examples
 ```jldoctest
-julia> w = [1,2];
+julia> w = 2;
        n = 2;
+       x = [1,3,4]
+       interact(w, n, x)
+Vector{Float64}:
+ 0.0
+ 0.0
+ 0.0
+ 1.0
+ 3.0
+ 4.0
+```
+
+```jldoctest
+julia> w = [1,2]
+       n = 2
        x = [1 1;
             2 3;
-            5 4];
-       labeling = Bool.([1,1,0,0,0,1,0,1,0]);
+            5 4]
+       labeling = Bool.([1,1,0,0,0,1,0,1,0])
        interact(w,n,x,labeling)
 4×2 Matrix{Float64}:
  1.0  1.0
@@ -60,7 +115,7 @@ end
 
 
 """
-    interact!(WX,w,n,x,labeling=vcat(falses(size(x,2)),trues(n*size(x,2))))
+    interact!(WX, w, n, x[, labeling])
 
 In-place version of [`interact`](@ref).
 """

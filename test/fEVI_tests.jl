@@ -66,11 +66,9 @@ end
     @test wpost == [2]
 
     # The following tests that the policies can be simulated without errors
-    delay = 0
     policies = Dict("fEVIoff"=>fEVI_off, "fEVIon" => fEVI_on)
     mu = rand(rng, sum(labeling))
-    outcome_model = OutcomeLinearFixed(n, m, mu, sample_std, labeling)
-    r = simulation_stochastic(FX, FX, n, T, delay, policies, outcome_model;
-        reps=10, post_reps=10, rng)
+    outcome_model = OutcomeLinear(n, m, mu, sample_std, labeling)
+    r = simulation_stochastic(10, FX, n, T, policies, outcome_model; post_reps=10, rng)
     r = r["output"]
 end

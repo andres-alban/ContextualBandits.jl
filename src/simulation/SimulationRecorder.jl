@@ -10,7 +10,7 @@ abstract type SimulationRecorder end
     StandardRecorder
 
 Default recorder used in [simulation_stochastic](@ref).
-It records the Expected Opportunity Cost (regret) and the Probability of Incorrect Selection (PICS) for each time step.
+It records the online and offline regret and the Probability of Incorrect Selection (PICS) for each time step.
 `regret_on` and `PICS_on` refer to losses during the trial (online reward losses), 
 while `regret_off` and `PICS_off` refer to losses post-trial (offline rewards).
 

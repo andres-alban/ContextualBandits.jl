@@ -1,3 +1,11 @@
+"""
+    BayesLinearRegression(n, m, theta0, Sigma0, sample_std[, labeling])
+
+Bayesian linear regression model with `n` treatments and `m` covariates.
+
+See also: [ContextualBandits.initialize!](@ref), [ContextualBandits.state_update!](@ref),
+[BayesUpdateNormal](@ref), [BayesUpdateNormal!](@ref)
+"""
 mutable struct BayesLinearRegression
     n::Int
     m::Int
@@ -13,18 +21,24 @@ mutable struct BayesLinearRegression
     end
 end
 
-function initialize!(model::BayesLinearRegression,W=Int[],X=Float64[],Y=Float64[])
-    if length(Y) == 0
-        model.theta_t = copy(model.theta0)
-        model.Sigma_t = copy(model.Sigma0)
-    else # pilot data to build the prior
-        WX = interact(W, model.n, X, model.labeling)
-        model.theta_t, model.Sigma_t = BayesUpdateNormal(model.theta0, model.Sigma0, WX, Y, model.sample_std)
-        robustify_prior_linear!(model.theta_t, model.Sigma_t, model.n, model.m, model.labeling)
-    end
+"""
+    initialize!(model::BayesLinearRegression)
+
+Reset the posterior mean `model.theta_t` and covariance matrix `model.Sigma_t` to the prior 
+mean `theta0` and covariance matrix `Sigma0`.
+"""
+function initialize!(model::BayesLinearRegression)
+    model.theta_t = copy(model.theta0)
+    model.Sigma_t = copy(model.Sigma0)
     return
 end
 
+"""
+    state_update!(model::BayesLinearRegression, W, X, Y)
+
+Update the posterior mean `model.theta_t` and covariance matrix `model.Sigma_t`
+after observing treatments `W`, covariates `X`, and outcomes `Y`.
+"""
 function state_update!(model::BayesLinearRegression,W,X,Y)
     BayesUpdateNormal!(model.theta_t, model.Sigma_t, interact(W, model.n, X, model.labeling), Y, model.sample_std)
     return

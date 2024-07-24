@@ -1,6 +1,6 @@
 """
     OutcomeLinearBayes <: OutcomeModel
-    OutcomeLinearBayes(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(n*m)))
+    OutcomeLinearBayes(n, m, theta0, Sigma0, sample_std[, labeling])
 
 Linear outcome model with coefficients randomly drawn from a normal prior distribution
 with mean vector `theta0` and covariance matrix `Sigma0`.
@@ -57,8 +57,8 @@ end
 ###############################################################################
 
 """
-    OutcomeLinearFixed <: OutcomeModel
-    OutcomeLinearFixed(n, m, mu, sample_std, labeling=vcat(falses(m),trues(n*m)))
+    OutcomeLinear <: OutcomeModel
+    OutcomeLinear(n, m, mu, sample_std[, labeling])
 
 Linear outcome model with fixed coefficients `mu`.
 `n` is the number of treatments, `m` is the number of covariates, including the intercept term.
@@ -74,13 +74,13 @@ By default, only predictive coefficients are active.
 
 Outcomes are observed with white noise around the mean with sample standard deviation `sample_std`.
 """
-struct OutcomeLinearFixed <: OutcomeModel
+struct OutcomeLinear <: OutcomeModel
     n::Int
     m::Int # number of covariates, including the intercept term
     mu::Vector{Float64}
     sample_std::Float64
     labeling::BitVector
-    function OutcomeLinearFixed(n, m, mu, sample_std, labeling=vcat(falses(m),trues(n*m)))
+    function OutcomeLinear(n, m, mu, sample_std, labeling=vcat(falses(m),trues(n*m)))
         d = sum(labeling)
         length(labeling) == (n+1)*m || throw(DomainError(labeling,"`labeling` must have length `(n+1)*m`."))
         length(mu) == d || throw(DomainError(mu,"`mu` must be of length `sum(labeling)`."))
@@ -88,18 +88,18 @@ struct OutcomeLinearFixed <: OutcomeModel
     end
 end
 
-function outcome_model_state!(outcome_model::OutcomeLinearFixed,rng::AbstractRNG=Random.GLOBAL_RNG)
+function outcome_model_state!(outcome_model::OutcomeLinear,rng::AbstractRNG=Random.GLOBAL_RNG)
     return
 end
 
-function mean_outcome(outcome_model::OutcomeLinearFixed,W,X)
+function mean_outcome(outcome_model::OutcomeLinear,W,X)
     return interact(W,outcome_model.n,X,outcome_model.labeling)' * outcome_model.mu
 end
 
-function noisy_outcome(outcome_model::OutcomeLinearFixed,W,X,Z)
+function noisy_outcome(outcome_model::OutcomeLinear,W,X,Z)
     return mean_outcome(outcome_model,W,X) + outcome_model.sample_std*Z
 end
 
-function noise_outcome(outcome_model::OutcomeLinearFixed,rng::AbstractRNG=Random.GLOBAL_RNG)
+function noise_outcome(outcome_model::OutcomeLinear,rng::AbstractRNG=Random.GLOBAL_RNG)
     return randn(rng)
 end

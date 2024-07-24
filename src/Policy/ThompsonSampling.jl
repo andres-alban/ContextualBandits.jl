@@ -55,7 +55,7 @@ function TTTS_linear(n, theta, Sigma, Xt, beta=0.5, maxiter=100, labeling=vcat(f
 end
 """
     TSPolicyLinear <: PolicyLinear
-    TSPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(n*m)))
+    TSPolicyLinear(n, m, theta0, Sigma0, sample_std[, labeling])
 
 Allocate treatment using Thompson Sampling and update based on the linear model with labeling to make an implementation.
 """
@@ -73,11 +73,9 @@ end
 
 """
     TTTSPolicyLinear <: PolicyLinear
-    TTTSPolicyLinear(n, m, theta0, Sigma0, sample_std, beta, maxiter, labeling=vcat(falses(m),trues(n*m)))
+    TTTSPolicyLinear(n, m, theta0, Sigma0, sample_std, beta, maxiter[, labeling])
 
 Allocate treatment using Top-Two Thompson Sampling and update based on the linear model with labeling to make an implementation.
-
-See also [TTTS_linear](@ref).
 
 [Russo D (2020) Simple Bayesian algorithms for best arm identification. Operations Research 68(6)](https://doi.org/10.1287/opre.2019.1911)
 """

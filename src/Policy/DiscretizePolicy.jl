@@ -1,3 +1,9 @@
+"""
+    DiscretizePolicy{T<:Policy} <: Policy
+    DiscretizePolicy(subpolicy::T, FX::Union{CovariatesIndependent,CovariatesCopula}, breakpoints) where {T<:Policy}
+
+Modify `subpolicy` by discretizing the covariates in `FX` before passing them to `subpolicy`.`
+"""
 mutable struct DiscretizePolicy{T<:Policy} <: Policy
     subpolicy::T
     FX::Union{CovariatesIndependent,CovariatesCopula}

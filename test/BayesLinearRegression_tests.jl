@@ -13,7 +13,7 @@ using Test
     theta0 = zeros(sum(labeling))
     Sigma0 = Diagonal(ones(sum(labeling)))
     model = BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling)
-    ContextualBandits.initialize!(model,[],[],[])
+    ContextualBandits.initialize!(model)
     @test model.theta_t == theta0
     @test model.Sigma_t == Sigma0
     X = [1.0, 2.0, 5.0]
@@ -34,7 +34,7 @@ end
     theta0 = zeros(sum(labeling))
     Sigma0 = Diagonal(ones(sum(labeling)))
     model = ContextualBandits.BayesLinearRegressionDiscrete(n, m, theta0, Sigma0, sample_std, FX, labeling)
-    ContextualBandits.initialize!(model,[],[],[])
+    ContextualBandits.initialize!(model)
     theta0_disc, Sigma0_disc = ContextualBandits.X2g_prior(theta0, Sigma0, FX, labeling, n)
     @test model.theta_t == theta0_disc
     @test model.Sigma_t == Sigma0_disc

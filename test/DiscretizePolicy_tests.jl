@@ -18,11 +18,10 @@ using Test
     random_policy = RandomPolicyLinear(n, m, theta0, Sigma0, sample_std)
 
     T = 10
-    delay = 0
     policies = Dict("fEVI_discretized" => policy, "random" => random_policy)
     rng = MersenneTwister(1234)
-    outcome_model = OutcomeLinearFixed(n, m, rand(rng,n*m), sample_std)
-    results = simulation_stochastic(FX, FX, n, T, delay, policies, outcome_model, reps=10, post_reps=10, rng=rng)
+    outcome_model = OutcomeLinear(n, m, rand(rng,n*m), sample_std)
+    results = simulation_stochastic(10, FX, n, T, policies, outcome_model, post_reps=10, rng=rng)
     eocoff = results["output"]["fEVI_discretized"]["regret_off"]["mean"]
     eocon = results["output"]["fEVI_discretized"]["regret_on"]["mean"]
     @test !all(eocoff .== eocoff[1])

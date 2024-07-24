@@ -24,9 +24,9 @@ using Test
     policies = Dict( "fEVI_infer" => fEVI_infer, "fEVI" => fEVI)
 
     rng = MersenneTwister(1234)
-    outcome_model = OutcomeLinearFixed(n, m, rand(rng,sum(labeling)), sample_std, labeling)
+    outcome_model = OutcomeLinear(n, m, rand(rng,sum(labeling)), sample_std, labeling)
 
-    results = simulation_stochastic(FX,FX,n,T,0,policies,outcome_model,reps=10,post_reps=10,rng=rng)
+    results = simulation_stochastic(10,FX,n,T,policies,outcome_model,post_reps=10,rng=rng)
 
     # Test that the labeling is not the same for all time points or trivial at the end
     x = results["output"]["fEVI_infer"]
@@ -54,9 +54,9 @@ end
     policies = Dict("fEVIMC_infer" => fEVIMC_infer, "fEVIMC" => fEVIMC)
 
     rng = MersenneTwister(1234)
-    outcome_model = OutcomeLinearFixed(n, m, rand(rng,sum(labeling)), sample_std, labeling)
+    outcome_model = OutcomeLinear(n, m, rand(rng,sum(labeling)), sample_std, labeling)
 
-    results = simulation_stochastic(FX,FX,n,T,0,policies,outcome_model,reps=10,post_reps=10,rng=rng)
+    results = simulation_stochastic(10,FX,n,T,policies,outcome_model,post_reps=10,rng=rng)
 
     # Test that the labeling is not the same for all time points or trivial at the end
     x = results["output"]["fEVIMC_infer"]

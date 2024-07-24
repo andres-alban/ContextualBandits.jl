@@ -4,12 +4,19 @@
 Abstract supertype that updates using the model with a labeling and implements the treatments strategy that maximizes expected outcomes.
 It does not provide an allocation policy, which should be defined for each subtype.
 
-All subtypes must include a `model::BayesLinearRegression` field.
+All subtypes must include a `model::BayesLinearRegression` field. `initialize!` and
+`state_update!` methods are defined to maintain the state. An `implementation` method
+is defined to implement the treatment with the largest expected value. An `allocation`
+method must be defined by the subtypes.
 """
 abstract type PolicyLinear <: Policy end
 
 function initialize!(policy::PolicyLinear,W=Int[],X=Float64[],Y=Float64[])
-    initialize!(policy.model,W,X,Y)
+    initialize!(policy.model)
+    if length(Y) > 0
+        state_update!(policy.model,W,X,Y)
+        robustify_prior_linear!(policy.model.theta_t, policy.model.Sigma_t, policy.model.n, policy.model.m, policy.model.labeling)
+    end
 end
 
 function state_update!(policy::PolicyLinear,W,X,Y,rng=Random.GLOBAL_RNG)
@@ -34,7 +41,7 @@ end
 
 """
     RandomPolicyLinear <: PolicyLinear
-    RandomPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(n*m)))
+    RandomPolicyLinear(n, m, theta0, Sigma0, sample_std[, labeling])
 
 Allocate treatment uniformly at random.
 Use a linear model (with `labeling`) to make an implementation.
@@ -53,7 +60,7 @@ end
 
 """
     GreedyPolicyLinear <: PolicyLinear
-    GreedyPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(n*m)))
+    GreedyPolicyLinear(n, m, theta0, Sigma0, sample_std[, labeling])
 
 Allocate and implement the treatment with the largest expected outcome based on 
 a linear model (with `labeling`).

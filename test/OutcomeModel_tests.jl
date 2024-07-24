@@ -3,13 +3,13 @@ using Random
 using LinearAlgebra
 using Test
 
-@testset "OutcomeLinearFixed" begin
+@testset "OutcomeLinear" begin
     n = 2
     m = 3
     labeling = [true, false, false, true, true, false, true, false, true]
     sample_std = 1.0
     mu = [1.0, 2.0, -1.0, -1.0, 2.0]
-    outcome_model = OutcomeLinearFixed(n, m, mu, sample_std, labeling)
+    outcome_model = OutcomeLinear(n, m, mu, sample_std, labeling)
     rng = MersenneTwister(1234)
     ContextualBandits.outcome_model_state!(outcome_model,rng)
     X = [1.0, 2.0, 5.0]

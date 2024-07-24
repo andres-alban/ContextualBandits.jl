@@ -83,9 +83,13 @@ end
     post_reps = 10
     pilot_samples_per_treatment = 0
     Xinterest = rand(FXtilde,2)
+    recorder = ContextualBandits.StandardRecorder()
+    weights = ones(post_reps)./post_reps
+    ContextualBandits.initialize!(recorder, T, n, length(FX), delay, post_reps, weights, size(Xinterest,2))
+    aggregators = aggregators = [ContextualBandits.StandardResultsAggregator(ContextualBandits.output_recorder(recorder),ContextualBandits.output_recorder_names(recorder)) for _ in policies]
     rng = MersenneTwister(1234)
-    x = ContextualBandits.simulation_stochastic_internal(FX,FXtilde,n,T,delay,policies,outcome_model;
-        reps=reps,post_reps=post_reps, pilot_samples_per_treatment = pilot_samples_per_treatment,Xinterest=Xinterest,rng=rng)
+    x = ContextualBandits.simulation_stochastic_internal(FX,FXtilde,n,T,delay,policies,outcome_model,
+        reps, post_reps, recorder, aggregators, pilot_samples_per_treatment, Xinterest, rng, false)
     y = ContextualBandits.asdict(x[2])
     @test all(y["regret_on"]["mean"] .>= 0.0)
     @test all(cumsum(y["regret_on"]["mean"]) .≈ y["cumulregret_on"]["mean"])
@@ -131,8 +135,8 @@ end
     pilot_samples_per_treatment = 0
     Xinterest = rand(FXtilde,2)
     rng = MersenneTwister(1234)
-    x = simulation_stochastic(FX,FXtilde,n,T,delay,policies,outcome_model;
-        reps=reps,post_reps=post_reps, pilot_samples_per_treatment = pilot_samples_per_treatment,Xinterest=Xinterest,rng=rng,verbose=true)
+    x = simulation_stochastic(reps, FX,n,T,policies,outcome_model; FXtilde, delay,
+        post_reps=post_reps, pilot_samples_per_treatment = pilot_samples_per_treatment,Xinterest=Xinterest,rng=rng,verbose=true)
     y = x["output"]["random"]
     @test all(y["regret_on"]["mean"] .>= 0.0)
     @test all(cumsum(y["regret_on"]["mean"]) .≈ y["cumulregret_on"]["mean"])
@@ -182,8 +186,8 @@ end
     pilot_samples_per_treatment = 0
     Xinterest = rand(FXtilde,2)
     rng = MersenneTwister(1234)
-    x = simulation_stochastic_parallel(FX,FXtilde,n,T,delay,policies,outcome_model;
-        reps=reps,post_reps=post_reps, pilot_samples_per_treatment = pilot_samples_per_treatment,Xinterest=Xinterest,rng=rng,verbose=true)
+    x = simulation_stochastic_parallel(reps,FX,n,T,policies,outcome_model; FXtilde, delay,
+        post_reps=post_reps, pilot_samples_per_treatment = pilot_samples_per_treatment,Xinterest=Xinterest,rng=rng,verbose=true)
     y = x["output"]["greedy"]
     @test all(y["regret_on"]["mean"] .>= 0.0)
     @test all(cumsum(y["regret_on"]["mean"]) .≈ y["cumulregret_on"]["mean"])
