@@ -9,6 +9,8 @@ In [Model](@ref), we introduced the [`Policy`](@ref) abstract type. Here, we fir
 PolicyLinear
 ```
 
+All instances of `PolicyLinear` use [Bayesian linear regression](@ref) and thus require a prior distribution that can be specified using [`default_prior_linear`](@ref) and [`robustify_prior_linear!`](@ref).
+
 ### Expected Value of Information (EVI)
 
 ```@docs
@@ -44,6 +46,20 @@ RABC_OCBA_PolicyLinear
 
 ```@docs
 InferLabelingPolicy
+```
+
+The `InferLabelingPolicy` requires a `LabelingSelector`:
+
+```@docs
+LabelingSelector
+ContextualBandits.initialize!(::LabelingSelector)
+ContextualBandits.labeling_selection
+```
+
+The following `LabelingSelector` using [Lasso](https://en.wikipedia.org/wiki/Lasso_(statistics)) was described in [Alban, Chick, Zoumpoulis (2024)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4160045):
+
+```@docs
+LassoCVLabelingSelector
 ```
 
 ### Discretize policy

@@ -20,7 +20,7 @@ pkg> add Distributions, LinearAlgebra
 
 ## Basic Usage
 
-Below is an example of a simulation. [`simulation_stochastic`](@ref) is the main function that guides the development of policies and other components. We will next explain what `simulation_stochastic` does. Then, we explain what the inputs represent and how you can modify them for your purposes.
+Below is an example of a simulation. [`simulation_stochastic`](@ref) is the main function that guides the development of policies and other components. We next explain the model behind `simulation_stochastic` that clarifies the input parameters and outputs.
 
 ```julia
 using ContextualBandits
