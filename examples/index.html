@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · ContextualBandits.jl</title><meta name="title" content="Examples · ContextualBandits.jl"/><meta property="og:title" content="Examples · ContextualBandits.jl"/><meta property="twitter:title" content="Examples · ContextualBandits.jl"/><meta name="description" content="Documentation for ContextualBandits.jl."/><meta property="og:description" content="Documentation for ContextualBandits.jl."/><meta property="twitter:description" content="Documentation for ContextualBandits.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">ContextualBandits.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Introduction</a></li><li><a class="tocitem" href="../gettingstarted/">Getting Started</a></li><li><a class="tocitem" href="../model/">Model</a></li><li><a class="tocitem" href="../simulation/">Simulation</a></li><li><a class="tocitem" href="../policies/">Policies</a></li><li><a class="tocitem" href="../outcome_models/">Outcome Models</a></li><li><a class="tocitem" href="../covariates_generation/">Covariates Generation</a></li><li class="is-active"><a class="tocitem" href>Examples</a><ul class="internal"><li><a class="tocitem" href="#Alban,-Chick,-Zoumpoulis-(2024)"><span>Alban, Chick, Zoumpoulis (2024)</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Examples</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Examples</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/andres-alban/ContextualBandits.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/andres-alban/ContextualBandits.jl/blob/main/docs/src/examples.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Examples"><a class="docs-heading-anchor" href="#Examples">Examples</a><a id="Examples-1"></a><a class="docs-heading-anchor-permalink" href="#Examples" title="Permalink"></a></h1><h2 id="Alban,-Chick,-Zoumpoulis-(2024)"><a class="docs-heading-anchor" href="#Alban,-Chick,-Zoumpoulis-(2024)">Alban, Chick, Zoumpoulis (2024)</a><a id="Alban,-Chick,-Zoumpoulis-(2024)-1"></a><a class="docs-heading-anchor-permalink" href="#Alban,-Chick,-Zoumpoulis-(2024)" title="Permalink"></a></h2><p>The following example recreates the results of Figure 2a in <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4160045">Alban, Chick, Zoumpoulis (2024)</a>. It requires two additional packages to save the data and plot it:</p><pre><code class="nohighlight hljs">pkg&gt; add JLD2, Plots</code></pre><h3 id="Example-simulation"><a class="docs-heading-anchor" href="#Example-simulation">Example simulation</a><a id="Example-simulation-1"></a><a class="docs-heading-anchor-permalink" href="#Example-simulation" title="Permalink"></a></h3><p>The simulation can take several hours because it runs 5000 replications (<code>reps=5000</code>). With ten cores on our machines, this simulation can run in about an hour. However, it may run faster or slower in your machine. We recommend you try it first setting <code>reps=10</code> or another small number, so you can predict how long it will take to run. You should also adjust the number of cores depending on your computer capacity.</p><pre><code class="language-julia hljs">using Distributed
+addprocs(10) # adjust the number of cores that will be used for simulation
+@everywhere using Pkg
+@everywhere Pkg.activate(&quot;.&quot;)
+@everywhere using ContextualBandits
+using Random
+using Distributions
+using Statistics
+using JLD2
+using LinearAlgebra
+
+# Setting up model
+n = 8 # number of treatments
+p = [59,129,184,150]./522 # 4 categories
+p_prog = [0.25,0.5,0.25] # low, medium, high
+FX = CovariatesIndependent([Categorical(p),OrdinalDiscrete(p_prog),OrdinalDiscrete(p_prog)])
+FXtilde = CovariatesIndependent([Categorical(p),OrdinalDiscrete(p_prog),OrdinalDiscrete(p_prog)])
+m = length(FX)
+sample_std = 1.0
+labeling = BitVector(
+         [1,1,1,1,1,0, # prognostic
+          0,0,0,0,0,0, # treatment 1
+          0,0,0,0,0,0, # treatment 2
+          0,0,0,0,0,0, # treatment 3
+          1,0,0,0,0,0, # treatment 4
+          0,1,0,0,0,0, # treatment 5
+          0,1,0,0,0,0, # treatment 6
+          0,1,0,0,0,0, # treatment 7
+          0,1,0,0,0,0, # treatment 8
+          ])
+
+# Setting up nature&#39;s distribution
+theta_nat = zeros(sum(labeling))
+Sigma_nat = 4*diagm(ones(sum(labeling)))
+# Positive correlation for the predictive coefficients
+Sigma_nat[7:10,7:10] = [4 1 1 0.5;
+                     1 4 0.5 1;
+                     1 0.5 4 1;
+                     0.5 1 1 4]
+
+outcome_model = OutcomeLinearBayes(n, m, theta_nat, Sigma_nat, sample_std, labeling)
+delay = 0
+
+# Setting up prior
+labeling0 = labeling
+sigma0 = 2
+psi = log(2)
+D = [
+      0 2 2 3 2 3 3 Inf;
+      2 0 3 2 3 2 Inf 3;
+      2 3 0 2 3 Inf 2 3;
+      3 2 2 0 Inf 3 3 2;
+      2 3 3 Inf 0 2 2 3;
+      3 2 Inf 3 2 0 3 2;
+      3 Inf 2 3 2 3 0 2;
+      Inf 3 3 2 3 2 2 0
+    ]
+theta0, Sigma0 = default_prior_linear(n, m, sigma0, psi, D, labeling0)
+
+## Random policy
+random_policy = RandomPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling0)
+
+## Thompson sampling
+TS_policy = TSPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling0)
+
+## Top-two Thompson sampling
+beta = 0.5
+maxiter = 100
+TTTS_policy = TTTSPolicyLinear(n, m, theta0, Sigma0, sample_std, beta, maxiter, labeling0)
+
+## fEVI policy
+fEVI_policy = fEVIDiscrete(n, m, theta0, Sigma0, sample_std, FX, labeling0)
+
+## fEVIon policy
+P = 0
+T = 1000
+fEVIon_policy = fEVIDiscreteOnOff(n, m, theta0, Sigma0, sample_std, FX, P, T, labeling0)
+
+## Biased Coin
+p1 = 0.5
+pk = vcat([p1], ones(n-1)*(1-p1)/(n-1))
+Gweight = [0,0.5,0.5,0]
+biasedcoin_policy = BiasedCoinPolicyLinear(n, m, theta0, Sigma0, sample_std, FX, labeling0;
+    p=pk, weights = Gweight)
+
+## OCBA
+ocba_policy = OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, FX, labeling0)
+
+## RABC
+Gweight = [0.25,0.25,0.25,0.25]
+RABC_policy = RABC_OCBA_PolicyLinear(n, m, theta0, Sigma0, sample_std, FX, labeling0; p=pk, weights=Gweight)
+
+## Greedy
+greedy_policy = GreedyPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling0)
+
+# policies
+policies = Dict(
+    &quot;random&quot; =&gt; random_policy, &quot;TS&quot; =&gt; TS_policy, 
+    &quot;TTTS&quot; =&gt; TTTS_policy, &quot;fEVI&quot; =&gt; fEVI_policy, &quot;fEVIon&quot; =&gt; fEVIon_policy,
+    &quot;biasedcoin&quot; =&gt; biasedcoin_policy, &quot;RABC&quot; =&gt; RABC_policy, &quot;ocba&quot; =&gt; ocba_policy, 
+    &quot;greedy&quot; =&gt; greedy_policy
+)
+
+# Settings for simulation runs
+T = 1000
+reps = 5000 # number of replications
+post_reps = 50
+Xinterest = [
+    1 1 1 1;
+    0 1 0 0;
+    0 0 1 0;
+    0 0 0 1;
+    0 0 0 0;
+    0 0 0 0
+]
+
+# run simulation
+rng = MersenneTwister(121)
+results = @time simulation_stochastic_parallel(reps, FX, n, T, policies, outcome_model;
+    FXtilde = FXtilde, delay = delay, post_reps=post_reps, rng=rng, Xinterest=Xinterest)
+
+
+## Save
+save(&quot;example.jld2&quot;, results)</code></pre><h3 id="Plotting-simulation-data"><a class="docs-heading-anchor" href="#Plotting-simulation-data">Plotting simulation data</a><a id="Plotting-simulation-data-1"></a><a class="docs-heading-anchor-permalink" href="#Plotting-simulation-data" title="Permalink"></a></h3><p>Once the simulation is finished and the data has been saved, you can reload the data and plot it:</p><pre><code class="language-julia hljs">using JLD2
+using Plots
+
+# load data
+output = load(&quot;example.jld2&quot;, &quot;output&quot;)
+
+# policies that will be plotted
+policy_keys = [&quot;fEVI&quot;,&quot;TTTS&quot;,&quot;RABC&quot;,&quot;TS&quot;,&quot;random&quot;,&quot;fEVIon&quot;]
+
+# performance metric to plot (regret, cumulregret, pics)
+metric = &quot;regret_off&quot;
+
+# horizon T and sample size
+T = length(output[policy_keys[1]][&quot;regret_on&quot;])
+
+# data to plot
+if occursin(&quot;off&quot;,metric) # offline metric
+    x = 0:T
+else # online metric
+    x = 1:T
+end
+y = Matrix{Float64}(undef,length(x),length(policy_keys))
+for i in eachindex(policy_keys)
+    y[:,i] = output[policy_keys[i]][metric][&quot;mean&quot;]
+end
+
+plot(x, y, label = policy_keys)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../covariates_generation/">« Covariates Generation</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.5.0 on <span class="colophon-date" title="Monday 29 July 2024 11:02">Monday 29 July 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
