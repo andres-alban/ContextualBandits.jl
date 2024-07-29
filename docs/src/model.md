@@ -122,6 +122,13 @@ interact
 interact!
 ```
 
+### Labeling
+
+A labeling "labels" how each covariate interacts with each treatment. It is a boolean vector of size `(n+1)*m` split into `n+1` blocks of `m` entries. The first `m` entries represent **prognostic** covariates, those covariates that have an equal effect on all treatments. By default, all prognostic labels are `false`, meaning there are no prognostic effects. The remaining `n` blocks represent the **predictive** covariates with respect to the corresponding treatment, those covariates that have a treatment-specific effect. By default, all predictive labels are `true`, meaning each covariates has an effect specific to each treatment, or equivalently, each treatment has a separate model.
+
+Generally, the first covariate is an intercept term that is `1` for all subjects. Thus, the first prognostic term represents an intercept term, and the first term for each block of predictive covariates are treatment effects.
+
+### Bayesian linear regression
 We use the following type to learn Bayesian linear regression models. Policies
 will often use this type
 ```@docs
@@ -134,11 +141,12 @@ ContextualBandits.initialize!(::BayesLinearRegression)
 ContextualBandits.state_update!(::BayesLinearRegression,W,X,Y)
 ```
 
-### Labeling
+To select a prior, the package provides the following utilities to generate the robust prior of [Alban, Chick, Zoumpoulis (2024)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4160045).
 
-A labeling "labels" how each covariate interacts with each treatment. It is a boolean vector of size `(n+1)*m` split into `n+1` blocks of `m` entries. The first `m` entries represent **prognostic** covariates, those covariates that have an equal effect on all treatments. By default, all prognostic labels are `false`, meaning there are no prognostic effects. The remaining `n` blocks represent the **predictive** covariates with respect to the corresponding treatment, those covariates that have a treatment-specific effect. By default, all predictive labels are `true`, meaning each covariates has an effect specific to each treatment, or equivalently, each treatment has a separate model.
-
-Generally, the first covariate is an intercept term that is `1` for all subjects. Thus, the first prognostic term represents an intercept term, and the first term for each block of predictive covariates are treatment effects. 
+```@docs
+default_prior_linear
+robustify_prior_linear!
+```
 
 ### Additional utilities
 ```@docs

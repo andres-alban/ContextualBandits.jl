@@ -20,8 +20,8 @@ Online metrics are recorded for each time `t=1:T`. All offline metrics are recor
 
 Two additional outputs are provided that are useful for understanding policies that infer the labeling:
 
-9. `"labeling_frac"`: Which entries of labeling where `true` when the trial concluded, which after aggregation represents the fraction of replications in which the entries labeling were `true`.
-10. `"sum_labeling"`: The number of `true` entries of labeling.
+9. `"labeling_frac"`: which entries of labeling where `true` when the trial concluded, which after aggregation represents the fraction of replications in which the entries were `true`.
+10. `"sum_labeling"`: the number of `true` entries of labeling.
 
 ## Parallel Computing
 

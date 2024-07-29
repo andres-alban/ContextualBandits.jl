@@ -9,6 +9,7 @@ makedocs(sitename="ContextualBandits.jl",
         "simulation.md",
         "policies.md",
         "outcome_models.md",
-        "covariates_generation.md"
+        "covariates_generation.md",
+        "examples.md"
     ]
 )
