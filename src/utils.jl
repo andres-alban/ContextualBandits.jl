@@ -142,11 +142,11 @@ function interact!(WX,w,n,x,labeling=vcat(falses(size(x,1)),trues(n*size(x,1))))
 end
 
 """
-    argmax_ties(itr,rng=Random.GLOBAL_RNG)
+    argmax_ties(itr,rng=Random.default_rng())
 
 Select the argmax of `itr` solving ties uniformly at random.
 """
-function argmax_ties(itr,rng=Random.GLOBAL_RNG)
+function argmax_ties(itr,rng=Random.default_rng())
     maxs = findall(itr .== maximum(itr))
     if length(maxs) == 1
         return maxs[1]
@@ -156,11 +156,11 @@ function argmax_ties(itr,rng=Random.GLOBAL_RNG)
 end
 
 """
-    argmin_ties(itr,rng=Random.GLOBAL_RNG)
+    argmin_ties(itr,rng=Random.default_rng())
 
 Select the argmin of `itr` solving ties uniformly at random.
 """
-function argmin_ties(itr,rng=Random.GLOBAL_RNG)
+function argmin_ties(itr,rng=Random.default_rng())
     mins = findall(itr .== minimum(itr))
     if length(mins) == 1
         return mins[1]

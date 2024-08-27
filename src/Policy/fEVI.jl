@@ -74,7 +74,7 @@ function fEVIDiscrete(n, m, theta0, Sigma0, sample_std, FX, labeling=vcat(falses
     fEVIDiscrete(BayesLinearRegressionDiscrete(n, m, theta0, Sigma0, sample_std, FX, labeling))
 end
 
-function allocation(policy::fEVIDiscrete,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
+function allocation(policy::fEVIDiscrete,Xcurrent,W,X,Y,rng=Random.default_rng())
     g = X2g(Xcurrent, policy.model.FX)
     return argmax_ties(fEVI(policy.model.n, policy.model.gn, policy.model.theta_t, policy.model.Sigma_t, policy.model.sample_std, g, policy.model.p), rng)
 end
@@ -97,7 +97,7 @@ function fEVIDiscreteOnOff(n, m, theta0, Sigma0, sample_std, FX, P, T, labeling=
     fEVIDiscreteOnOff(BayesLinearRegressionDiscrete(n, m, theta0, Sigma0, sample_std, FX, labeling), P, T)
 end
 
-function allocation(policy::fEVIDiscreteOnOff,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
+function allocation(policy::fEVIDiscreteOnOff,Xcurrent,W,X,Y,rng=Random.default_rng())
     g = X2g(Xcurrent,policy.model.FX)
     t = length(W)
     expected_outcomes = policy.model.theta_t[treatment_g2index.(1:policy.model.n, g, policy.model.gn)]

@@ -19,7 +19,7 @@ using Test
 
     T = 10
     policies = Dict("fEVI_discretized" => policy, "random" => random_policy)
-    rng = MersenneTwister(1234)
+    rng = Xoshiro(1234)
     outcome_model = OutcomeLinear(n, m, rand(rng,n*m), sample_std)
     results = simulation_stochastic(10, FX, n, T, policies, outcome_model, post_reps=10, rng=rng)
     eocoff = results["output"]["fEVI_discretized"]["regret_off"]["mean"]

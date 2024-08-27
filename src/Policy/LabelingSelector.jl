@@ -12,7 +12,7 @@ abstract type LabelingSelector end
 Select a labeling based on the vector of treatments `W`, covariates matrix `X`,
 and vector of outcomes `Y`.
 """
-function labeling_selection(selection::LabelingSelector, W, X, Y, rng=Random.GLOBAL_RNG)
+function labeling_selection(selection::LabelingSelector, W, X, Y, rng=Random.default_rng())
     return vcat(falses(selection.m), trues(selection.n * selection.m))
 end
 
@@ -51,7 +51,7 @@ struct LassoCVLabelingSelector <: LabelingSelector
     end
 end
 
-function labeling_selection(selection::LassoCVLabelingSelector, W, X, Y, rng=Random.GLOBAL_RNG)
+function labeling_selection(selection::LassoCVLabelingSelector, W, X, Y, rng=Random.default_rng())
     labeling = copy(selection.labeling_base)
     labeling[1] = false # skip the intercept term because glmnet includes it automatically
     WX = interact(W, selection.n, X, labeling)

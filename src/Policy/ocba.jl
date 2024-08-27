@@ -63,7 +63,7 @@ function OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{Covariates
     OCBAPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), predictive)
 end
 
-function allocation(policy::OCBAPolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
+function allocation(policy::OCBAPolicyLinear,Xcurrent,W,X,Y,rng=Random.default_rng())
     # We only consider patients in the same predictive group
     index_subgroup = [X[policy.predictive,i] == Xcurrent[policy.predictive] for i in axes(X,2)]
     W_subgroup = @view W[index_subgroup]

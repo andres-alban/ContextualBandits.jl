@@ -10,11 +10,11 @@ Each subtype should implement these functions.
 abstract type OutcomeModel end
 
 """
-    outcome_model_state!(outcome_model::OutcomeModel,rng::AbstractRNG=Random.GLOBAL_RNG)
+    outcome_model_state!(outcome_model::OutcomeModel,rng::AbstractRNG=Random.default_rng())
 
 Set the state of an outcome model. Mainly used to change the state of random instances.
 """
-function outcome_model_state!(outcome_model::OutcomeModel,rng::AbstractRNG=Random.GLOBAL_RNG)
+function outcome_model_state!(outcome_model::OutcomeModel,rng::AbstractRNG=Random.default_rng())
     return
 end
 
@@ -40,12 +40,12 @@ function noisy_outcome(outcome_model::OutcomeModel,W,X,Z)
 end
 
 """
-    noise_outcome(outcome_model::OutcomeModel,rng::AbstractRNG=Random.GLOBAL_RNG)
+    noise_outcome(outcome_model::OutcomeModel,rng::AbstractRNG=Random.default_rng())
 
 Generate noise object to be passed to [noisy_outcome](@ref).
 
 It can generate a normal distribution with zero mean for Gaussian models or vectors of random variables for more complex models.
 """
-function noise_outcome(outcome_model::OutcomeModel,rng::AbstractRNG=Random.GLOBAL_RNG)
+function noise_outcome(outcome_model::OutcomeModel,rng::AbstractRNG=Random.default_rng())
     return 0.0
 end

@@ -25,7 +25,7 @@ Update the state of a policy given the data `W`, `X`, and `Y`. `W` is the vector
 
 For example, the policy may do Bayesian updating to get posterior parameters.
 """
-function state_update!(policy::Policy,W,X,Y,rng=Random.GLOBAL_RNG)
+function state_update!(policy::Policy,W,X,Y,rng=Random.default_rng())
 end
 
 """
@@ -36,7 +36,7 @@ Return a treatment to allocate a patient with covariates `Xcurrent`, given that 
 
 The dimension of `Y` may be smaller than that of `W` and `X` because of delays in outcomes.
 """
-function allocation(policy::Policy,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
+function allocation(policy::Policy,Xcurrent,W,X,Y,rng=Random.default_rng())
     return 1
 end
 
@@ -50,7 +50,7 @@ function implementation(policy::Policy,X_post,W,X,Y)
     return ones(Int,size(X_post,2))
 end
 
-function allocationIndependent(policy::Policy,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG,check=false,delay=0,Wpilot=[],Xpilot=[],Ypilot=[])
+function allocationIndependent(policy::Policy,Xcurrent,W,X,Y,rng=Random.default_rng(),check=false,delay=0,Wpilot=[],Xpilot=[],Ypilot=[])
     initialize!(policy,Wpilot,Xpilot,Ypilot)
     T = length(Y)
     for t in 1:(T+delay)
@@ -68,7 +68,7 @@ function allocationIndependent(policy::Policy,Xcurrent,W,X,Y,rng=Random.GLOBAL_R
     return allocation(policy, Xcurrent, W, X, Y, rng)
 end
 
-function implementationIndependent(policy::Policy,X_post,W,X,Y,rng=Random.GLOBAL_RNG,Wpilot=Int[],Xpilot=Float64[],Ypilot=Float64[])
+function implementationIndependent(policy::Policy,X_post,W,X,Y,rng=Random.default_rng(),Wpilot=Int[],Xpilot=Float64[],Ypilot=Float64[])
     initialize!(policy,Wpilot,Xpilot,Ypilot)
     for t in eachindex(Y)
         state_update!(policy,view(W,1:t),view(X,:,1:t),view(Y,1:t),rng)
@@ -82,7 +82,7 @@ struct RandomPolicy <: Policy
     n::Int
 end
 
-function allocation(policy::RandomPolicy,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
+function allocation(policy::RandomPolicy,Xcurrent,W,X,Y,rng=Random.default_rng())
     return rand(rng,1:policy.n)
 end
 
@@ -91,6 +91,6 @@ struct RoundRobinPolicy <: Policy
     n::Int
 end
 
-function allocation(policy::RoundRobinPolicy,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
+function allocation(policy::RoundRobinPolicy,Xcurrent,W,X,Y,rng=Random.default_rng())
     return (length(W) % policy.n) + 1
 end

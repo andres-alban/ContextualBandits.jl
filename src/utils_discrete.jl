@@ -150,7 +150,7 @@ function X2g_probs(FX::CovariatesCopula)
     catn = [length(support(m)) for m in marginals(FX)]
     p_disc = zeros(prod(catn))
     reps = length(p_disc)*1000
-    rng = MersenneTwister(8765)
+    rng = Xoshiro(8765)
     for _ in 1:reps
         g = X2g(rand(rng,FX),FX)
         p_disc[g] += 1

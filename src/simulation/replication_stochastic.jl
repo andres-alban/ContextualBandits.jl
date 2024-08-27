@@ -1,10 +1,10 @@
 """
-    replication_stochastic(X,X_post,Z,n,delay,policy,outcome_model,recorder;Xinterest=Matrix{Float64}(undef,size(X,1),0),X_post_weights=ones(size(X_post,2)),rng=Random.GLOBAL_RNG)
+    replication_stochastic(X,X_post,Z,n,delay,policy,outcome_model,recorder;Xinterest=Matrix{Float64}(undef,size(X,1),0),X_post_weights=ones(size(X_post,2)),rng=Random.default_rng())
 
 Simulate one replication of a trial with covariates `X`, post-trial covariates `X_post`, noise `Z`, number of treatments `n`, delay `delay`, policy `policy`, outcome model `outcome_model`.
 This function is not intended to be called directly, but rather through [simulation_stochastic](@ref).
 """
-function replication_stochastic(X,X_post,Z,n,delay,policy,outcome_model,recorder;Xinterest=Matrix{Float64}(undef,size(X,1),0),X_post_weights=ones(size(X_post,2)),rng=Random.GLOBAL_RNG)
+function replication_stochastic(X,X_post,Z,n,delay,policy,outcome_model,recorder;Xinterest=Matrix{Float64}(undef,size(X,1),0),X_post_weights=ones(size(X_post,2)),rng=Random.default_rng())
 
     @assert size(X,1) == size(X_post,1) "X_post is not consistent with the size of X"
     T = size(X,2)

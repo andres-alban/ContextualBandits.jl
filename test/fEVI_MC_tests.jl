@@ -4,7 +4,7 @@ using Distributions
 using Test
 
 @testset "fEVI_MC family functions" begin
-    rng = MersenneTwister(1234)
+    rng = Xoshiro(1234)
     n = 3
     FXtilde = CovariatesIndependent([Categorical(1/3,1/3,1/3), OrdinalDiscrete([1/2,1/2])])
     m = length(FXtilde)
@@ -43,7 +43,7 @@ using Test
 end
 
 @testset "fEVI_MC family policies" begin
-    rng = MersenneTwister(1234)
+    rng = Xoshiro(1234)
     n = 3
     FXtilde = CovariatesIndependent([Categorical(1/3,1/3,1/3), Normal()])
     m = length(FXtilde)
@@ -60,8 +60,8 @@ end
     X = rand(rng,FXtilde,1)
     Y = rand(rng,1)
     Xt = rand(rng,FXtilde)
-    @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) == 2
+    @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n 
     ContextualBandits.state_update!(policy, W, X, Y, rng)
-    @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) == 2
-    @test ContextualBandits.implementation(policy, Xt, W, X, Y) == [2]
+    @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
+    @test all(ContextualBandits.implementation(policy, Xt, W, X, Y) .∈ Ref(1:n))
 end

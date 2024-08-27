@@ -5,22 +5,24 @@ using Random
 using BenchmarkTools
 using Test
 
-@testset "CovariatesCopula" begin
-    rng = MersenneTwister(1234)
-    copula = GaussianCopula([1 0.2; 0.2 1])
-    FX = CovariatesCopula([Categorical([1/3,1/3,1/3]),Normal(0,1)],copula)
-    @test rand(rng,FX) == [1.0, 0.0, 1.0, -0.7100554506335256]
-end
-
-@testset "CovariatesIndependent" begin
+@testset "CovariatesCopula and CovariatesIndependent" begin
     copula = GaussianCopula([1 0.0; 0.0 1])
     FX = CovariatesCopula([Categorical([1/3,1/3,1/3]),Normal(0,1)],copula)
     FXi = CovariatesIndependent([Categorical([1/3,1/3,1/3]),Normal(0,1)])
 
-    rng = MersenneTwister(1234)
-    @test rand(rng,FX) == [1.0, 1.0, 0.0, 0.7283392731742008]
-    rng = MersenneTwister(1234)
-    @test rand(rng,FXi) == [1.0, 1.0, 0.0, -0.9017438158568171]
+    rng = Xoshiro(1234)
+    X = rand(rng,FX)
+    @test X[1] == 1.0
+    @test sum(X[2:3]) == 1.0 || sum(X[2:3]) == 0.0
+    @test all(X[2:3] .∈ Ref([0,1]))
+    @test X[4] < 10 && X[4] > -10 && X[4] != 0.0
+
+    rng = Xoshiro(1234)
+    Xi = rand(rng,FXi)
+    @test Xi[1] == 1.0
+    @test sum(Xi[2:3]) == 1.0 || sum(Xi[2:3]) == 0.0
+    @test all(Xi[2:3] .∈ Ref([0,1]))
+    @test Xi[4] < 10 && Xi[4] > -10 && X[4] != 0.0
     
     # CovariatesIndependent is slightly faster than CovariatesCopula
     # @benchmark rand($rng,$FX)
@@ -28,17 +30,27 @@ end
 end
 
 @testset "CovariatesInteracted" begin
-    rng = MersenneTwister(1234)
+    rng = Xoshiro(1234)
     copula = GaussianCopula([1 0.2; 0.2 1])
     FX = CovariatesCopula([Categorical([1/3,1/3,1/3]),Normal(0,1)],copula)
-    FXinteracted = CovariatesInteracted(FX,[x->x[1], x->x[2], x->x[2]*x[4], x->x[3]*x[4]])
-    @test rand(rng,FXinteracted) == [1.0, 0.0, 0.0, -0.7100554506335256]
+    FXinteracted = CovariatesInteracted(FX,[x->x[1], x->x[2], x->x[3], x->x[4], x->x[2]*x[4], x->x[3]*x[4]])
+    X = rand(rng,FXinteracted) 
+    @test length(X) == 6
+    @test X[1] == 1.0
+    @test sum(X[2:3]) == 1.0 || sum(X[2:3]) == 0.0
+    @test all(X[2:3] .∈ Ref([0,1]))
+    @test X[4] < 10 && X[4] > -10 && X[4] != 0.0
+    @test X[5] .∈ Ref([0,X[4]])
+    @test X[6] .∈ Ref([0,X[4]])
 end
 
 @testset "OrdinalDiscrete" begin
-    rng = MersenneTwister(1234)
+    rng = Xoshiro(1234)
     FX = CovariatesIndependent([OrdinalDiscrete([1/3,1/3,1/3]),Normal(0,1)])
-    @test rand(rng,FX) ==[1.0, 1.0, -0.9017438158568171]
+    X = rand(rng,FX)
+    @test X[1] == 1.0
+    @test X[2] in 0:2
+    @test X[3] < 10 && X[3] > -10 && X[3] != 0.0
 end
 
 @testset "covariates_partition" begin

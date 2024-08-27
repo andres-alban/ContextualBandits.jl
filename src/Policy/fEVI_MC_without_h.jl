@@ -1,4 +1,4 @@
-function fEVI_MC_without_h(n, m, theta, Sigma, sample_std, Xt, FXtilde, Wpipeline, Xpipeline, etaon, etaoff, labeling=vcat(falses(m),trues(n*m)), rng=Random.GLOBAL_RNG)
+function fEVI_MC_without_h(n, m, theta, Sigma, sample_std, Xt, FXtilde, Wpipeline, Xpipeline, etaon, etaoff, labeling=vcat(falses(m),trues(n*m)), rng=Random.default_rng())
     theta_temp = similar(theta)
     nu = zeros(n)
     WkronX_pipe = interact(Wpipeline,n,Xpipeline,labeling)
@@ -39,7 +39,7 @@ function fEVI_MC_without_h(n, m, theta, Sigma, sample_std, Xt, FXtilde, Wpipelin
     return nu
 end
 
-function fEVI_MC_without_h_indep(n, m, theta, Sigma, sample_std, Xt, FXtilde, Wpipeline, Xpipeline, etaon, etaoff, labeling=vcat(falses(m),trues(n*m)), rng=Random.GLOBAL_RNG)
+function fEVI_MC_without_h_indep(n, m, theta, Sigma, sample_std, Xt, FXtilde, Wpipeline, Xpipeline, etaon, etaoff, labeling=vcat(falses(m),trues(n*m)), rng=Random.default_rng())
     theta_temp = similar(theta)
     nu = zeros(n)
     WkronX_pipe = interact(Wpipeline,n,Xpipeline,labeling)

@@ -1,4 +1,4 @@
-function fEVI_MC(n, m, theta, Sigma, sample_std, Xt, FXtilde, Wpipeline, Xpipeline, etaon, etaoff, labeling=vcat(falses(m),trues(n*m)), rng=Random.GLOBAL_RNG)
+function fEVI_MC(n, m, theta, Sigma, sample_std, Xt, FXtilde, Wpipeline, Xpipeline, etaon, etaoff, labeling=vcat(falses(m),trues(n*m)), rng=Random.default_rng())
     # length(FXtilde) == m || throw
     # sum(labeling) == length(theta) || throw
     theta_temp = similar(theta)
@@ -47,7 +47,7 @@ function fEVI_MC(n, m, theta, Sigma, sample_std, Xt, FXtilde, Wpipeline, Xpipeli
     return lognu
 end
 
-function fEVI_MC_indep(n, m, theta, Sigma, sample_std, Xt, FXtilde, Wpipeline, Xpipeline, etaon, etaoff, labeling=vcat(falses(m),trues(n*m)), rng=Random.GLOBAL_RNG)
+function fEVI_MC_indep(n, m, theta, Sigma, sample_std, Xt, FXtilde, Wpipeline, Xpipeline, etaon, etaoff, labeling=vcat(falses(m),trues(n*m)), rng=Random.default_rng())
     theta_temp = similar(theta)
     lognu = ones(n) * -Inf
     WkronX_pipe = interact(Wpipeline,n,Xpipeline,labeling)
@@ -115,7 +115,7 @@ function fEVI_MC_PolicyLinear(n, m, theta0, Sigma0, sample_std, FXtilde, etaon, 
     fEVI_MC_PolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), FXtilde, etaon, etaoff)
 end
 
-function allocation(policy::fEVI_MC_PolicyLinear, Xcurrent, W, X, Y, rng=Random.GLOBAL_RNG)
+function allocation(policy::fEVI_MC_PolicyLinear, Xcurrent, W, X, Y, rng=Random.default_rng())
     pipeend = length(W)
     pipestart = length(Y) + 1
     fEVI_MC_indices = fEVI_MC(policy.model.n, policy.model.m, policy.model.theta_t, policy.model.Sigma_t, policy.model.sample_std, Xcurrent,
