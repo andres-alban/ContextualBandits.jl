@@ -11,26 +11,26 @@ method must be defined by the subtypes.
 """
 abstract type PolicyLinear <: Policy end
 
-function initialize!(policy::PolicyLinear,W=Int[],X=Float64[],Y=Float64[])
+function initialize!(policy::PolicyLinear, W=Int[], X=Float64[], Y=Float64[])
     initialize!(policy.model)
     if length(Y) > 0
-        state_update!(policy.model,W,X,Y)
+        state_update!(policy.model, W, X, Y)
         robustify_prior_linear!(policy.model.theta_t, policy.model.Sigma_t, policy.model.n, policy.model.m, policy.model.labeling)
     end
 end
 
-function state_update!(policy::PolicyLinear,W,X,Y,rng=Random.default_rng())
+function state_update!(policy::PolicyLinear, W, X, Y, rng=Random.default_rng())
     t = length(Y)
     if t > 0
-        state_update!(policy.model,W[t],view(X,:,t),Y[t])
+        state_update!(policy.model, W[t], view(X, :, t), Y[t])
     end
 end
 
-function implementation(policy::PolicyLinear,X_post,W,X,Y)
-    P = size(X_post,2)
-    treat_post = Vector{Int}(undef,P)
-    for k in 1:P 
-        treat_post[k] = argmax([interact(iw, policy.model.n, view(X_post,:,k), policy.model.labeling)' * policy.model.theta_t for iw in 1:policy.model.n])
+function implementation(policy::PolicyLinear, X_post, W, X, Y)
+    P = size(X_post, 2)
+    treat_post = Vector{Int}(undef, P)
+    for k in 1:P
+        treat_post[k] = argmax([interact(iw, policy.model.n, view(X_post, :, k), policy.model.labeling)' * policy.model.theta_t for iw in 1:policy.model.n])
     end
     return treat_post
 end
@@ -50,12 +50,12 @@ struct RandomPolicyLinear <: PolicyLinear
     model::BayesLinearRegression
 end
 
-function RandomPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(n*m)))
+function RandomPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m), trues(n * m)))
     RandomPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling))
 end
 
-function allocation(policy::RandomPolicyLinear,Xcurrent,W,X,Y,rng=Random.default_rng())
-    rand(rng,1:policy.model.n)
+function allocation(policy::RandomPolicyLinear, Xcurrent, W, X, Y, rng=Random.default_rng())
+    rand(rng, 1:policy.model.n)
 end
 
 """
@@ -69,10 +69,10 @@ struct GreedyPolicyLinear <: PolicyLinear
     model::BayesLinearRegression
 end
 
-function GreedyPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(n*m)))
+function GreedyPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m), trues(n * m)))
     GreedyPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling))
 end
 
-function allocation(policy::GreedyPolicyLinear,Xcurrent,W,X,Y,rng=Random.default_rng())
+function allocation(policy::GreedyPolicyLinear, Xcurrent, W, X, Y, rng=Random.default_rng())
     return argmax_ties([interact(iw, policy.model.n, Xcurrent, policy.model.labeling)' * policy.model.theta_t for iw in 1:policy.model.n], rng)
 end

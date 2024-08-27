@@ -25,32 +25,32 @@ struct OutcomeLinearBayes <: OutcomeModel
     sample_std::Float64
     labeling::BitVector
     mu::Vector{Float64}
-    function OutcomeLinearBayes(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(n*m)))
+    function OutcomeLinearBayes(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m), trues(n * m)))
         d = sum(labeling)
-        length(labeling) == (n+1)*m || throw(DomainError(labeling,"`labeling` must have length `(n+1)*m`."))
-        length(theta0) == d || throw(DomainError(theta0,"`theta0` must be of length `sum(labeling)`."))
-        size(Sigma0) == (d,d) || throw(DomainError(Sigma0,"`Sigma0` must be of dimensions `sum(labeling)`."))
-        issymmetric(Sigma0) || throw(DomainError(Sigma0,"`Sigma0` must be symmetric."))
-        minimum(eigvals(Sigma0)) >= 0 || throw(DomainError(Sigma0,"`Sigma0` must be positive semidefinite."))
+        length(labeling) == (n + 1) * m || throw(DomainError(labeling, "`labeling` must have length `(n+1)*m`."))
+        length(theta0) == d || throw(DomainError(theta0, "`theta0` must be of length `sum(labeling)`."))
+        size(Sigma0) == (d, d) || throw(DomainError(Sigma0, "`Sigma0` must be of dimensions `sum(labeling)`."))
+        issymmetric(Sigma0) || throw(DomainError(Sigma0, "`Sigma0` must be symmetric."))
+        minimum(eigvals(Sigma0)) >= 0 || throw(DomainError(Sigma0, "`Sigma0` must be positive semidefinite."))
         mu = zeros(d)
         new(n, m, copy(theta0), copy(Sigma0), sample_std, copy(labeling), mu)
     end
 end
 
-function outcome_model_state!(outcome_model::OutcomeLinearBayes,rng::AbstractRNG=Random.default_rng())
+function outcome_model_state!(outcome_model::OutcomeLinearBayes, rng::AbstractRNG=Random.default_rng())
     outcome_model.mu .= randnMv(rng, outcome_model.theta0, outcome_model.Sigma0)
     return
 end
 
-function mean_outcome(outcome_model::OutcomeLinearBayes,W,X)
-    return interact(W,outcome_model.n,X,outcome_model.labeling)' * outcome_model.mu
+function mean_outcome(outcome_model::OutcomeLinearBayes, W, X)
+    return interact(W, outcome_model.n, X, outcome_model.labeling)' * outcome_model.mu
 end
 
-function noisy_outcome(outcome_model::OutcomeLinearBayes,W,X,Z)
-    return mean_outcome(outcome_model,W,X) + outcome_model.sample_std*Z
+function noisy_outcome(outcome_model::OutcomeLinearBayes, W, X, Z)
+    return mean_outcome(outcome_model, W, X) + outcome_model.sample_std * Z
 end
 
-function noise_outcome(outcome_model::OutcomeLinearBayes,rng::AbstractRNG=Random.default_rng())
+function noise_outcome(outcome_model::OutcomeLinearBayes, rng::AbstractRNG=Random.default_rng())
     return randn(rng)
 end
 
@@ -80,26 +80,26 @@ struct OutcomeLinear <: OutcomeModel
     mu::Vector{Float64}
     sample_std::Float64
     labeling::BitVector
-    function OutcomeLinear(n, m, mu, sample_std, labeling=vcat(falses(m),trues(n*m)))
+    function OutcomeLinear(n, m, mu, sample_std, labeling=vcat(falses(m), trues(n * m)))
         d = sum(labeling)
-        length(labeling) == (n+1)*m || throw(DomainError(labeling,"`labeling` must have length `(n+1)*m`."))
-        length(mu) == d || throw(DomainError(mu,"`mu` must be of length `sum(labeling)`."))
+        length(labeling) == (n + 1) * m || throw(DomainError(labeling, "`labeling` must have length `(n+1)*m`."))
+        length(mu) == d || throw(DomainError(mu, "`mu` must be of length `sum(labeling)`."))
         new(n, m, copy(mu), sample_std, copy(labeling))
     end
 end
 
-function outcome_model_state!(outcome_model::OutcomeLinear,rng::AbstractRNG=Random.default_rng())
+function outcome_model_state!(outcome_model::OutcomeLinear, rng::AbstractRNG=Random.default_rng())
     return
 end
 
-function mean_outcome(outcome_model::OutcomeLinear,W,X)
-    return interact(W,outcome_model.n,X,outcome_model.labeling)' * outcome_model.mu
+function mean_outcome(outcome_model::OutcomeLinear, W, X)
+    return interact(W, outcome_model.n, X, outcome_model.labeling)' * outcome_model.mu
 end
 
-function noisy_outcome(outcome_model::OutcomeLinear,W,X,Z)
-    return mean_outcome(outcome_model,W,X) + outcome_model.sample_std*Z
+function noisy_outcome(outcome_model::OutcomeLinear, W, X, Z)
+    return mean_outcome(outcome_model, W, X) + outcome_model.sample_std * Z
 end
 
-function noise_outcome(outcome_model::OutcomeLinear,rng::AbstractRNG=Random.default_rng())
+function noise_outcome(outcome_model::OutcomeLinear, rng::AbstractRNG=Random.default_rng())
     return randn(rng)
 end

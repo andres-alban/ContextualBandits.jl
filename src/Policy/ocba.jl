@@ -5,7 +5,7 @@ Compute the allocation probabilities prescribed by the OCBA algorithm
 for a normal distribution with mean `mu` and sample variance `sample_var`.
 [Chen, C., Chick, S.E., Lee, L.H., & Pujowidianto, N.A. (2015). Ranking and Selection: Efficient Simulation Budget Allocation.](https://doi.org/10.1007/978-1-4939-1384-8_3)
 """
-function ocba_normal(mu,sample_var)
+function ocba_normal(mu, sample_var)
     length(mu) == length(sample_var) || throw(ArgumentError("mu and sample_var must be the same length"))
     imax = argmax(mu)
     imin = argmin(mu)
@@ -21,11 +21,11 @@ function ocba_normal(mu,sample_var)
         if i == imax || i == imin
             continue
         end
-        p[i] = sample_var[i] / (mu[i]-mumax)^2 / (sample_var[imin] / (mumin - mumax)^2)
+        p[i] = sample_var[i] / (mu[i] - mumax)^2 / (sample_var[imin] / (mumin - mumax)^2)
     end
-    pnotmax = p[p .!= 0]
-    varnotmax = sample_var[p .!= 0]
-    p[imax] = sqrt(sample_var[imax]) * sqrt(sum(pnotmax.^2 ./ varnotmax))
+    pnotmax = p[p.!=0]
+    varnotmax = sample_var[p.!=0]
+    p[imax] = sqrt(sample_var[imax]) * sqrt(sum(pnotmax .^ 2 ./ varnotmax))
     p /= sum(p)
     return p
 end
@@ -45,7 +45,7 @@ and the predictive groups will be automatically determined based on the `labelin
 > NOTE: the covariates specified in predictive should be discrete.
 > If it is not discrete, the algorithm will run but the results may not be meaningful.
 """
-struct OCBAPolicyLinear <: PolicyLinear 
+struct OCBAPolicyLinear <: PolicyLinear
     model::BayesLinearRegression
     predictive::Vector{Int}
     function OCBAPolicyLinear(model, predictive)
@@ -54,38 +54,38 @@ struct OCBAPolicyLinear <: PolicyLinear
     end
 end
 
-function OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, predictive, labeling=vcat(falses(m),trues(n*m)))
+function OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, predictive, labeling=vcat(falses(m), trues(n * m)))
     OCBAPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), predictive)
 end
 
-function OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula, CovariatesIndependent}, labeling=vcat(falses(m),trues(n*m)))
+function OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula,CovariatesIndependent}, labeling=vcat(falses(m), trues(n * m)))
     predictive, _ = labeling2predprog(n, FX, labeling)
     OCBAPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), predictive)
 end
 
-function allocation(policy::OCBAPolicyLinear,Xcurrent,W,X,Y,rng=Random.default_rng())
+function allocation(policy::OCBAPolicyLinear, Xcurrent, W, X, Y, rng=Random.default_rng())
     # We only consider patients in the same predictive group
-    index_subgroup = [X[policy.predictive,i] == Xcurrent[policy.predictive] for i in axes(X,2)]
+    index_subgroup = [X[policy.predictive, i] == Xcurrent[policy.predictive] for i in axes(X, 2)]
     W_subgroup = @view W[index_subgroup]
     p = [sum(W_subgroup .== w) for w in 1:policy.model.n]
     unobserved_treatments = findall(p .== 0)
     if length(unobserved_treatments) == 1
         return unobserved_treatments[1]
     elseif length(unobserved_treatments) > 1
-        return rand(rng,unobserved_treatments)
+        return rand(rng, unobserved_treatments)
     end
     p /= length(W_subgroup)
-    means = [interact(iw,policy.model.n,Xcurrent, policy.model.labeling)' * policy.model.theta_t for iw in 1:policy.model.n]
+    means = [interact(iw, policy.model.n, Xcurrent, policy.model.labeling)' * policy.model.theta_t for iw in 1:policy.model.n]
     # Before computing the OCBA probabilities, we would like to identify the alternatives 
     # that are equivalent in the sense that they are perfectly correlated and 
     # have the same mean and variance. For simplicity, here we assume that arms
     # with same mean are equivalent. Those alternatives that are equivalent will
     # be passed as a single alternative to the OCBA algorithm and the probability 
     # of the OCBA algorithm will be evenly distributed among equivalent arms.
-    means,m,c = unique_values_helper(means)
+    means, m, c = unique_values_helper(means)
     vars = ones(length(means)) * policy.model.sample_std^2
-    p_ocba = ocba_normal(means,vars)
-    p_ocba_final = [p_ocba[m[i]]/c[i] for i in 1:policy.model.n]
+    p_ocba = ocba_normal(means, vars)
+    p_ocba_final = [p_ocba[m[i]] / c[i] for i in 1:policy.model.n]
     return argmax_ties(p_ocba_final - p, rng)
 end
 
@@ -97,8 +97,8 @@ the original vector to the unique values and the counts of each unique value.
 """
 function unique_values_helper(x)
     u = unique(x)
-    mapping = Vector{Int}(undef,length(x))
-    count_unique = Vector{Int}(undef,length(x))
+    mapping = Vector{Int}(undef, length(x))
+    count_unique = Vector{Int}(undef, length(x))
     for i in eachindex(u)
         same = isequal.(x, u[i])
         mapping[same] .= i

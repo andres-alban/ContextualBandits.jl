@@ -14,7 +14,7 @@ abstract type OutcomeModel end
 
 Set the state of an outcome model. Mainly used to change the state of random instances.
 """
-function outcome_model_state!(outcome_model::OutcomeModel,rng::AbstractRNG=Random.default_rng())
+function outcome_model_state!(outcome_model::OutcomeModel, rng::AbstractRNG=Random.default_rng())
     return
 end
 
@@ -23,7 +23,7 @@ end
 
 Compute the mean outcome of treatment `W` with covariates `X`.
 """
-function mean_outcome(outcome_model::OutcomeModel,W,X)
+function mean_outcome(outcome_model::OutcomeModel, W, X)
     return 0.0
 end
 
@@ -35,7 +35,7 @@ Compute noisy outcome of treatment `W` with covariates `X` given noise `Z`.
 
 Usually calls [`mean_outcome`](@ref) and adds zero mean noise `Z`.
 """
-function noisy_outcome(outcome_model::OutcomeModel,W,X,Z)
+function noisy_outcome(outcome_model::OutcomeModel, W, X, Z)
     return 0.0
 end
 
@@ -46,6 +46,6 @@ Generate noise object to be passed to [noisy_outcome](@ref).
 
 It can generate a normal distribution with zero mean for Gaussian models or vectors of random variables for more complex models.
 """
-function noise_outcome(outcome_model::OutcomeModel,rng::AbstractRNG=Random.default_rng())
+function noise_outcome(outcome_model::OutcomeModel, rng::AbstractRNG=Random.default_rng())
     return 0.0
 end

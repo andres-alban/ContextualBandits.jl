@@ -8,12 +8,12 @@ using Test
     m = mean(x)
     v = var(x)
     for i in x
-        ContextualBandits.update!(agg,i)
+        ContextualBandits.update!(agg, i)
     end
     @test mean(agg) ≈ mean(x)
     @test var(agg) ≈ var(x)
     @test std(agg) ≈ std(x)
-    @test ContextualBandits.mean_stderr(agg) ≈ std(x)/sqrt(1000)
+    @test ContextualBandits.mean_stderr(agg) ≈ std(x) / sqrt(1000)
     ContextualBandits.reset!(agg)
     @test mean(agg) == 0.0
     @test agg.S == 0.0
@@ -23,24 +23,24 @@ using Test
     @test isnan(ContextualBandits.mean_stderr(agg))
 
     N = 1000
-    breaks = Int.([floor(0.1*N),floor(0.7*N)])
+    breaks = Int.([floor(0.1 * N), floor(0.7 * N)])
     x = rand(N)
     agg1 = ContextualBandits.RunningMeanVariance{Float64}()
     agg2 = ContextualBandits.RunningMeanVariance{Float64}()
     agg3 = ContextualBandits.RunningMeanVariance{Float64}()
     for i in 1:breaks[1]
-        ContextualBandits.update!(agg1,x[i])
+        ContextualBandits.update!(agg1, x[i])
     end
     for i in breaks[1]+1:breaks[2]
-        ContextualBandits.update!(agg2,x[i])
+        ContextualBandits.update!(agg2, x[i])
     end
     for i in breaks[2]+1:N
-        ContextualBandits.update!(agg3,x[i])
+        ContextualBandits.update!(agg3, x[i])
     end
-    ContextualBandits.update!(agg1,agg2)
-    ContextualBandits.update!(agg1,agg3)
+    ContextualBandits.update!(agg1, agg2)
+    ContextualBandits.update!(agg1, agg3)
     @test mean(agg1) ≈ mean(x)
     @test var(agg1) ≈ var(x)
-    @test var(agg1,corrected=false) ≈ var(x,corrected = false)
+    @test var(agg1, corrected=false) ≈ var(x, corrected=false)
 
 end

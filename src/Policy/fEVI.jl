@@ -14,17 +14,17 @@ logarithm of the expected value of information gained to treat patients in group
 if we were to select treatment `w` to treat the patient in group `gt`.
 """
 function fEVIaux(n, gn, theta, Sigma, sample_std, gt)
-    logQ = Matrix{Float64}(undef,gn,n)
+    logQ = Matrix{Float64}(undef, gn, n)
     for w in 1:n
-        current = treatment_g2index(w,gt,gn)
-        denominator = sqrt(Sigma[current,current] + sample_std[current]^2)
+        current = treatment_g2index(w, gt, gn)
+        denominator = sqrt(Sigma[current, current] + sample_std[current]^2)
         if denominator == 0
-            logQ[:,w] .= -Inf
+            logQ[:, w] .= -Inf
         else
-            sigmatilde = Sigma[:,current]./denominator
+            sigmatilde = Sigma[:, current] ./ denominator
             for g in 1:gn
-                post = treatment_g2index.(1:n,g,gn)
-                logQ[g,w] = logEmaxAffine(theta[post],sigmatilde[post])
+                post = treatment_g2index.(1:n, g, gn)
+                logQ[g, w] = logEmaxAffine(theta[post], sigmatilde[post])
             end
         end
     end
@@ -32,7 +32,7 @@ function fEVIaux(n, gn, theta, Sigma, sample_std, gt)
 end
 
 function fEVIaux(n, gn, theta, Sigma, sample_std::Number, gt)
-    fEVIaux(n, gn, theta, Sigma, fill(sample_std,n*gn), gt)
+    fEVIaux(n, gn, theta, Sigma, fill(sample_std, n * gn), gt)
 end
 
 
@@ -52,9 +52,9 @@ fEVI value of treating the patient in group `gt` with treatment `w`.
 """
 function fEVI(n, gn, theta, Sigma, sample_std, gt, p)
     logQaux = fEVIaux(n, gn, theta, Sigma, sample_std, gt)
-    logQ = Vector{Float64}(undef,n)
+    logQ = Vector{Float64}(undef, n)
     for w in 1:n
-        logQ[w] = logSumExp(log.(p) + logQaux[:,w])
+        logQ[w] = logSumExp(log.(p) + logQaux[:, w])
     end
     return logQ
 end
@@ -70,11 +70,11 @@ mutable struct fEVIDiscrete <: PolicyLinearDiscrete
     model::BayesLinearRegressionDiscrete
 end
 
-function fEVIDiscrete(n, m, theta0, Sigma0, sample_std, FX, labeling=vcat(falses(m),trues(n*m)))
+function fEVIDiscrete(n, m, theta0, Sigma0, sample_std, FX, labeling=vcat(falses(m), trues(n * m)))
     fEVIDiscrete(BayesLinearRegressionDiscrete(n, m, theta0, Sigma0, sample_std, FX, labeling))
 end
 
-function allocation(policy::fEVIDiscrete,Xcurrent,W,X,Y,rng=Random.default_rng())
+function allocation(policy::fEVIDiscrete, Xcurrent, W, X, Y, rng=Random.default_rng())
     g = X2g(Xcurrent, policy.model.FX)
     return argmax_ties(fEVI(policy.model.n, policy.model.gn, policy.model.theta_t, policy.model.Sigma_t, policy.model.sample_std, g, policy.model.p), rng)
 end
@@ -93,12 +93,12 @@ mutable struct fEVIDiscreteOnOff <: PolicyLinearDiscrete
 end
 
 
-function fEVIDiscreteOnOff(n, m, theta0, Sigma0, sample_std, FX, P, T, labeling=vcat(falses(m),trues(n*m)))
+function fEVIDiscreteOnOff(n, m, theta0, Sigma0, sample_std, FX, P, T, labeling=vcat(falses(m), trues(n * m)))
     fEVIDiscreteOnOff(BayesLinearRegressionDiscrete(n, m, theta0, Sigma0, sample_std, FX, labeling), P, T)
 end
 
-function allocation(policy::fEVIDiscreteOnOff,Xcurrent,W,X,Y,rng=Random.default_rng())
-    g = X2g(Xcurrent,policy.model.FX)
+function allocation(policy::fEVIDiscreteOnOff, Xcurrent, W, X, Y, rng=Random.default_rng())
+    g = X2g(Xcurrent, policy.model.FX)
     t = length(W)
     expected_outcomes = policy.model.theta_t[treatment_g2index.(1:policy.model.n, g, policy.model.gn)]
     expected_outcomes .-= minimum(expected_outcomes) - 1 # shift expected outcomes so that the worst is 1 and we can take the logarithm

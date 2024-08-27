@@ -25,7 +25,7 @@ reset!(agg::RunningMeanVariance) = (agg.M = zero(agg.M); agg.S = zero(agg.S); ag
 
 Update the running mean and variance with the next member of the sequnce `x`.
 """
-function update!(agg::RunningMeanVariance,x)
+function update!(agg::RunningMeanVariance, x)
     if isnan(x)
         return
     elseif agg.n == 0
@@ -34,7 +34,7 @@ function update!(agg::RunningMeanVariance,x)
         agg.S = 0.0
     else
         agg.n += 1
-        agg.S = agg.S + (agg.n-1)/agg.n * (x - agg.M)^2
+        agg.S = agg.S + (agg.n - 1) / agg.n * (x - agg.M)^2
         agg.M = agg.M + (x - agg.M) / agg.n
     end
     return
@@ -45,7 +45,7 @@ end
 
 Update the running mean and variance `agg1` with the running mean and variance `agg2`.
 """
-function update!(agg1::T,agg2::T) where T<:RunningMeanVariance
+function update!(agg1::T, agg2::T) where {T<:RunningMeanVariance}
     agg1.S += agg2.S + (agg1.n * agg2.n / (agg1.n + agg2.n)) * (agg2.M - agg1.M)^2
     agg1.M += (agg2.n / (agg1.n + agg2.n)) * (agg2.M - agg1.M)
     agg1.n += agg2.n

@@ -7,7 +7,7 @@ Converts a design vector `X` with only discrete covariates into a group `g`,
 where `g` is a unique integer assigned to each combination of the covariate values.
 The reverse conversion can be achieved with [`g2X`](@ref).
 """
-function X2g(X,FX)
+function X2g(X, FX)
     # Assumes FX has an intercept and reduce_category
     g = 1
     sumcat = 0
@@ -17,15 +17,17 @@ function X2g(X,FX)
         catn = length(support(m))
         if typeof(m) <: Categorical
             Xtemp = X[(end-sumcat-catn+2):(end-sumcat)]
-            gtemp = findall(x->x==1,Xtemp)
-            if (length(gtemp) > 1) throw(DomainError("A category in X has more than one 1.")) end
+            gtemp = findall(x -> x == 1, Xtemp)
+            if (length(gtemp) > 1)
+                throw(DomainError("A category in X has more than one 1."))
+            end
             ggtemp = isempty(gtemp) ? 0 : gtemp[1]
-            g += ggtemp*prodcat
+            g += ggtemp * prodcat
             sumcat += catn - 1
             prodcat *= catn
         elseif typeof(m) <: OrdinalDiscrete
-            gtemp = findall(x->x==X[end-sumcat], support(m))
-            g += (gtemp[1]-1)*prodcat
+            gtemp = findall(x -> x == X[end-sumcat], support(m))
+            g += (gtemp[1] - 1) * prodcat
             sumcat += 1
             prodcat *= catn
         else
@@ -43,26 +45,26 @@ Converts a group `g` into a design vector `X`, where `g` is a unique integer
 assigned to each combination of the covariate values. The reverse conversion can
 be achieved with [`X2g`](@ref).
 """
-function g2X(g,FX)
+function g2X(g, FX)
     # Assumes FX has an intercept and reduce_category
     catn = [length(support(m)) for m in marginals(FX)]
     splits = prod(catn)
     g > 0 || g <= splits || throw(BoundsError("The group `g=$g` is out of bounds [1,$splits]"))
-    X = zeros(1+sum([typeof(m) <: Categorical ? length(support(m))-1 : 1 for m in marginals(FX)]))
+    X = zeros(1 + sum([typeof(m) <: Categorical ? length(support(m)) - 1 : 1 for m in marginals(FX)]))
     X[1] = 1
     index = 1
     for i in eachindex(marginals(FX))
         m = marginals(FX)[i]
         splits = splits // catn[i]
-        gcurrent = (g-1) ÷ splits
-        g = (g-1) % splits + 1
+        gcurrent = (g - 1) ÷ splits
+        g = (g - 1) % splits + 1
         if typeof(m) <: Categorical
             if (gcurrent > 0)
-                X[index + gcurrent] = 1
+                X[index+gcurrent] = 1
             end
             index = index + catn[i] - 1
         elseif typeof(m) <: OrdinalDiscrete
-            X[index + 1] = support(m)[gcurrent+1]
+            X[index+1] = support(m)[gcurrent+1]
             index += 1
         else
             throw(DomainError("The marginal $m at position $i is not a `Categorical` or `OrdinalDiscrete` distribution."))
@@ -75,16 +77,16 @@ function total_groups(FX)
     return prod([length(support(m)) for m in marginals(FX)])
 end
 
-function index2treatment(i,gn)
-    return (i-1) ÷ gn + 1
+function index2treatment(i, gn)
+    return (i - 1) ÷ gn + 1
 end
 
-function index2g(i,gn)
-    return ((i-1) % gn) + 1
+function index2g(i, gn)
+    return ((i - 1) % gn) + 1
 end
 
-function treatment_g2index(w,g,gn)
-    return (w-1)*gn + g
+function treatment_g2index(w, g, gn)
+    return (w - 1) * gn + g
 end
 
 """
@@ -92,29 +94,29 @@ end
 
 Transform the prior for covariate values to the prior for groups.
 """
-function X2g_prior(theta0,Sigma0,FX,labeling,n)
+function X2g_prior(theta0, Sigma0, FX, labeling, n)
     gn = total_groups(FX)
-    Xs = Matrix{Float64}(undef,length(FX),gn)
+    Xs = Matrix{Float64}(undef, length(FX), gn)
     for g in 1:gn
-        Xs[:,g] = g2X(g,FX)
+        Xs[:, g] = g2X(g, FX)
     end
-    combs = gn*n
+    combs = gn * n
     theta0_disc = zeros(combs)
     for i in 1:combs
-        w = index2treatment(i,gn)
-        g = index2g(i,gn)
-        theta0_disc[i] = interact(w,n,view(Xs,:,g),labeling)' * theta0
+        w = index2treatment(i, gn)
+        g = index2g(i, gn)
+        theta0_disc[i] = interact(w, n, view(Xs, :, g), labeling)' * theta0
     end
 
-    Sigma0_disc = zeros(combs,combs)
+    Sigma0_disc = zeros(combs, combs)
     for i in 1:combs
-        wi = index2treatment(i,gn)
-        gi = index2g(i,gn)
+        wi = index2treatment(i, gn)
+        gi = index2g(i, gn)
         for j in 1:i
-            wj = index2treatment(j,gn)
-            gj = index2g(j,gn)
-            Sigma0_disc[i,j] = interact(wi,n,view(Xs,:,gi),labeling)' * Sigma0 * interact(wj,n,view(Xs,:,gj),labeling)
-            Sigma0_disc[j,i] = Sigma0_disc[i,j]
+            wj = index2treatment(j, gn)
+            gj = index2g(j, gn)
+            Sigma0_disc[i, j] = interact(wi, n, view(Xs, :, gi), labeling)' * Sigma0 * interact(wj, n, view(Xs, :, gj), labeling)
+            Sigma0_disc[j, i] = Sigma0_disc[i, j]
         end
     end
 
@@ -136,8 +138,8 @@ function X2g_probs(FX::CovariatesIndependent)
         for i in eachindex(catn)
             m = marginals(FX)[i]
             splits = splits // catn[i]
-            gcurrent = (g-1) ÷ splits
-            g = (g-1) % splits + 1
+            gcurrent = (g - 1) ÷ splits
+            g = (g - 1) % splits + 1
             p_disc[j] *= probs(m)[gcurrent+1]
         end
     end
@@ -149,10 +151,10 @@ function X2g_probs(FX::CovariatesCopula)
     # An exact answer may be possible using the functionality of Copulas.jl
     catn = [length(support(m)) for m in marginals(FX)]
     p_disc = zeros(prod(catn))
-    reps = length(p_disc)*1000
+    reps = length(p_disc) * 1000
     rng = Xoshiro(8765)
     for _ in 1:reps
-        g = X2g(rand(rng,FX),FX)
+        g = X2g(rand(rng, FX), FX)
         p_disc[g] += 1
     end
     p_disc ./= reps
