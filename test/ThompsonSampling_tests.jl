@@ -6,7 +6,7 @@ using Test
 @testset "Thompson Sampling policy" begin
     n = 3
     m = 3
-    labeling=vcat(falses(m),trues(n*m))
+    labeling = vcat(falses(m), trues(n * m))
     theta0 = zeros(sum(labeling))
     Sigma0 = diagm(ones(sum(labeling)))
     sample_std = 1.0
@@ -19,14 +19,14 @@ using Test
     w = ContextualBandits.allocation(policy, Xcurrent, [], [], [], rng)
     @test w in 1:n
     ContextualBandits.state_update!(policy, w, Xcurrent, 1.0, rng)
-    @test policy.model.theta_t ≈ BayesUpdateNormal(theta0, Sigma0, interact(w, n, Xcurrent, labeling),  1.0, sample_std)[1]
+    @test policy.model.theta_t ≈ BayesUpdateNormal(theta0, Sigma0, interact(w, n, Xcurrent, labeling), 1.0, sample_std)[1]
     @test all(ContextualBandits.implementation(policy, Xcurrent, [], [], []) .∈ Ref(1:n))
 end
 
 @testset "Top Two Thompson Sampling policy" begin
     n = 3
     m = 3
-    labeling=vcat(falses(m),trues(n*m))
+    labeling = vcat(falses(m), trues(n * m))
     theta0 = zeros(sum(labeling))
     Sigma0 = diagm(ones(sum(labeling)))
     sample_std = 1.0
@@ -41,6 +41,6 @@ end
     w = ContextualBandits.allocation(policy, Xcurrent, [], [], [], rng)
     @test w in 1:n
     ContextualBandits.state_update!(policy, w, Xcurrent, 1.0, rng)
-    @test policy.model.theta_t ≈ BayesUpdateNormal(theta0, Sigma0, interact(w, n, Xcurrent, labeling),  1.0, sample_std)[1]
+    @test policy.model.theta_t ≈ BayesUpdateNormal(theta0, Sigma0, interact(w, n, Xcurrent, labeling), 1.0, sample_std)[1]
     @test all(ContextualBandits.implementation(policy, Xcurrent, [], [], []) .∈ Ref(1:n))
 end

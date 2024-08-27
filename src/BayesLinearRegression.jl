@@ -15,7 +15,7 @@ mutable struct BayesLinearRegression
     labeling::BitVector
     theta_t::Vector{Float64}
     Sigma_t::Matrix{Float64}
-    function BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(n*m)))
+    function BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m), trues(n * m)))
         checkInputPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling)
         new(n, m, copy(theta0), copy(Sigma0), sample_std, copy(labeling), similar(theta0), similar(Sigma0))
     end
@@ -39,7 +39,7 @@ end
 Update the posterior mean `model.theta_t` and covariance matrix `model.Sigma_t`
 after observing treatments `W`, covariates `X`, and outcomes `Y`.
 """
-function state_update!(model::BayesLinearRegression,W,X,Y)
+function state_update!(model::BayesLinearRegression, W, X, Y)
     BayesUpdateNormal!(model.theta_t, model.Sigma_t, interact(W, model.n, X, model.labeling), Y, model.sample_std)
     return
 end
@@ -50,14 +50,14 @@ end
 
 function checkInputPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling)
     d = sum(labeling)
-    length(labeling) == (n+1)*m || throw(DomainError(labeling,"`labeling` must have length `(n+1)*m`."))
-    length(theta0) == d || throw(DomainError(theta0,"`theta0` must be of length `sum(labeling)`."))
-    size(Sigma0) == (d,d) || throw(DomainError(Sigma0,"`Sigma0` must be of dimensions `sum(labeling)`."))
-    issymmetric(Sigma0) || throw(DomainError(Sigma0,"`Sigma0` must be symmetric."))
+    length(labeling) == (n + 1) * m || throw(DomainError(labeling, "`labeling` must have length `(n+1)*m`."))
+    length(theta0) == d || throw(DomainError(theta0, "`theta0` must be of length `sum(labeling)`."))
+    size(Sigma0) == (d, d) || throw(DomainError(Sigma0, "`Sigma0` must be of dimensions `sum(labeling)`."))
+    issymmetric(Sigma0) || throw(DomainError(Sigma0, "`Sigma0` must be symmetric."))
     mineigval = minimum(eigvals(Sigma0))
-    mineigval >= -sqrt(eps(Float64)) || throw(DomainError(Sigma0,"`Sigma0` must be positive semidefinite."))
+    mineigval >= -sqrt(eps(Float64)) || throw(DomainError(Sigma0, "`Sigma0` must be positive semidefinite."))
     mineigval > 0 || @warn "`Sigma0` is semi-definite. Numerical errors are possible."
-    sample_std >= 0 || throw(DomainError(sample_std,"`sample_std` must be positive."))
+    sample_std >= 0 || throw(DomainError(sample_std, "`sample_std` must be positive."))
     return true
 end
 
@@ -76,8 +76,8 @@ In the latter case, `y` and `sample_std` can be vectors of the same length as th
 
 See also: [BayesUpdateNormal!](@ref)
 """
-function BayesUpdateNormal(theta,Sigma,X,y,sample_std)
-    BayesUpdateNormal!(copy(theta),copy(Sigma),X,y,sample_std)
+function BayesUpdateNormal(theta, Sigma, X, y, sample_std)
+    BayesUpdateNormal!(copy(theta), copy(Sigma), X, y, sample_std)
 end
 
 """
@@ -85,24 +85,24 @@ end
 
 In-place version of [BayesUpdateNormal](@ref)
 """
-function BayesUpdateNormal!(theta,Sigma,X,y,sample_std)
-    theta .= theta .+ (y .- X'*theta)./(sample_std^2 .+ X'*Sigma*X) .* Sigma*X
-    Sigma .= Sigma - ((X' * Sigma)' * (X' *Sigma)) ./ (sample_std^2 .+ X'*Sigma*X)
-    return theta,Sigma
+function BayesUpdateNormal!(theta, Sigma, X, y, sample_std)
+    theta .= theta .+ (y .- X' * theta) ./ (sample_std^2 .+ X' * Sigma * X) .* Sigma * X
+    Sigma .= Sigma - ((X' * Sigma)' * (X' * Sigma)) ./ (sample_std^2 .+ X' * Sigma * X)
+    return theta, Sigma
 end
 
-function BayesUpdateNormal!(theta,Sigma,X,y::AbstractVector,sample_std)
+function BayesUpdateNormal!(theta, Sigma, X, y::AbstractVector, sample_std)
     for i in eachindex(y)
-        BayesUpdateNormal!(theta,Sigma,view(X,:,i),y[i],sample_std)
+        BayesUpdateNormal!(theta, Sigma, view(X, :, i), y[i], sample_std)
     end
-    return theta,Sigma
+    return theta, Sigma
 end
 
-function BayesUpdateNormal!(theta,Sigma,X,y::AbstractVector,sample_std::AbstractVector)
+function BayesUpdateNormal!(theta, Sigma, X, y::AbstractVector, sample_std::AbstractVector)
     for i in eachindex(y)
-        BayesUpdateNormal!(theta,Sigma,view(X,:,i),y[i],sample_std[i])
+        BayesUpdateNormal!(theta, Sigma, view(X, :, i), y[i], sample_std[i])
     end
-    return theta,Sigma
+    return theta, Sigma
 end
 
 
@@ -119,14 +119,14 @@ mutable struct BayesLinearRegressionDiscrete
     p::Vector{Float64}
     theta_t::Vector{Float64}
     Sigma_t::Matrix{Float64}
-    function BayesLinearRegressionDiscrete(n, m, theta0, Sigma0, sample_std, FX, labeling=vcat(falses(m),trues(n*m)))
+    function BayesLinearRegressionDiscrete(n, m, theta0, Sigma0, sample_std, FX, labeling=vcat(falses(m), trues(n * m)))
         checkInputPolicyLinearDiscrete(n, m, theta0, Sigma0, sample_std, labeling, FX)
         gn = total_groups(FX)
         new(n, m, copy(theta0), copy(Sigma0), sample_std, copy(labeling), FX, gn, X2g_probs(FX), similar(theta0), similar(Sigma0))
     end
 end
 
-function initialize!(model::BayesLinearRegressionDiscrete,W=Int[],X=Float64[],Y=Float64[])
+function initialize!(model::BayesLinearRegressionDiscrete, W=Int[], X=Float64[], Y=Float64[])
     if length(Y) > 0
         WX = interact(W, model.n, X, model.labeling)
         theta, Sigma = BayesUpdateNormal(model.theta0, model.Sigma0, WX, Y, model.sample_std)
@@ -138,9 +138,9 @@ function initialize!(model::BayesLinearRegressionDiscrete,W=Int[],X=Float64[],Y=
     return
 end
 
-function state_update!(model::BayesLinearRegressionDiscrete,W,X,Y)
+function state_update!(model::BayesLinearRegressionDiscrete, W, X, Y)
     if W isa AbstractVector
-        index = [treatment_g2index(W[i], X2g(view(X,:,i), model.FX), model.gn) for i in eachindex(W)]
+        index = [treatment_g2index(W[i], X2g(view(X, :, i), model.FX), model.gn) for i in eachindex(W)]
     else
         index = treatment_g2index(W, X2g(X, model.FX), model.gn)
     end
@@ -172,8 +172,8 @@ X[index] = 1
 BayesUpdateNormal(theta,Sigma,X,y,sample_std) == BayesUpdateNormalDiscrete(theta,Sigma,index,y,sample_std)
 ```
 """
-function BayesUpdateNormalDiscrete(theta,Sigma,index,y,sample_std)
-    BayesUpdateNormalDiscrete!(copy(theta),copy(Sigma),index,y,sample_std)
+function BayesUpdateNormalDiscrete(theta, Sigma, index, y, sample_std)
+    BayesUpdateNormalDiscrete!(copy(theta), copy(Sigma), index, y, sample_std)
 end
 
 """
@@ -182,21 +182,21 @@ end
 In-place version of [BayesUpdateNormalDiscrete](@ref).
 """
 function BayesUpdateNormalDiscrete!(theta, Sigma, index, y, sample_std)
-    theta .= theta .+ (y .- theta[index])./(sample_std^2 .+ Sigma[index,index]) .* Sigma[:,index]
-    Sigma .= Sigma - (Sigma[:,index] * Sigma[:,index]') ./ (sample_std^2 .+ Sigma[index,index])
-    return theta,Sigma
+    theta .= theta .+ (y .- theta[index]) ./ (sample_std^2 .+ Sigma[index, index]) .* Sigma[:, index]
+    Sigma .= Sigma - (Sigma[:, index] * Sigma[:, index]') ./ (sample_std^2 .+ Sigma[index, index])
+    return theta, Sigma
 end
 
 function BayesUpdateNormalDiscrete!(theta, Sigma, index, y::AbstractVector, sample_std)
     for i in eachindex(y)
-        BayesUpdateNormalDiscrete!(theta,Sigma,index[i],y[i],sample_std)
+        BayesUpdateNormalDiscrete!(theta, Sigma, index[i], y[i], sample_std)
     end
-    return theta,Sigma
+    return theta, Sigma
 end
 
 function BayesUpdateNormalDiscrete!(theta, Sigma, index, y::AbstractVector, sample_std::AbstractVector)
     for i in eachindex(y)
-        BayesUpdateNormalDiscrete!(theta,Sigma,index[i],y[i],sample_std[i])
+        BayesUpdateNormalDiscrete!(theta, Sigma, index[i], y[i], sample_std[i])
     end
-    return theta,Sigma
+    return theta, Sigma
 end

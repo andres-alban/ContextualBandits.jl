@@ -36,21 +36,21 @@ struct CovariatesCopula{C} <: Sampleable{Multivariate,Continuous}
     cat::BitVector
     intercept::Bool
     reduce_category::Bool
-    function CovariatesCopula(marginals,copula,intercept=true,reduce_category=true)
-        length(copula) == length(marginals) || throw(DomainError(copula,"The copula has to have the same length as the marginals"))
+    function CovariatesCopula(marginals, copula, intercept=true, reduce_category=true)
+        length(copula) == length(marginals) || throw(DomainError(copula, "The copula has to have the same length as the marginals"))
         if intercept && reduce_category
             reduce_category = true
         else
             reduce_category = false
         end
         len = 0
-        cat = BitVector(zeros(Bool,length(marginals)))
+        cat = BitVector(zeros(Bool, length(marginals)))
         for i in 1:length(marginals)
             if typeof(marginals[i]) <: Categorical
                 cat[i] = true
                 len += length(support(marginals[i]))
                 if reduce_category
-                    len -=1
+                    len -= 1
                 end
             else
                 len += 1
@@ -60,19 +60,19 @@ struct CovariatesCopula{C} <: Sampleable{Multivariate,Continuous}
             len += 1
         end
         new{typeof(copula)}(marginals, copula, len, cat, intercept, reduce_category)
-    end  
+    end
 end
 
-function CovariatesCopula(marginals::Array{<:Distribution{Univariate,S} where S<:ValueSupport,1},corr::Float64,intercept=true,reduce_category=true)
-    corr_mat = fill(corr,(length(marginals),length(marginals)))
+function CovariatesCopula(marginals::Array{<:Distribution{Univariate,S} where {S<:ValueSupport},1}, corr::Float64, intercept=true, reduce_category=true)
+    corr_mat = fill(corr, (length(marginals), length(marginals)))
     for i in 1:length(marginals)
-        corr_mat[i,i] = 1.
+        corr_mat[i, i] = 1.0
     end
     copula = GaussianCopula(corr_mat)
     CovariatesCopula(marginals, copula, intercept, reduce_category)
 end
 
-function CovariatesCopula(marginals::Array{<:Distribution{Univariate,S} where S<:ValueSupport,1},corr_mat::Array{Float64,2},intercept=true,reduce_category=true)
+function CovariatesCopula(marginals::Array{<:Distribution{Univariate,S} where {S<:ValueSupport},1}, corr_mat::Array{Float64,2}, intercept=true, reduce_category=true)
     copula = GaussianCopula(corr_mat)
     CovariatesCopula(marginals, copula, intercept, reduce_category)
 end
@@ -85,17 +85,17 @@ function marginals(d::CovariatesCopula)
     return d.marginals
 end
 
-function Distributions._rand!(rng::AbstractRNG,d::CovariatesCopula, x::AbstractVector{T}) where T<:Real
-    cop = rand(rng,d.copula)
+function Distributions._rand!(rng::AbstractRNG, d::CovariatesCopula, x::AbstractVector{T}) where {T<:Real}
+    cop = rand(rng, d.copula)
     x .= 0.0
     j = 1
     if d.intercept
-        x[j]=1
+        x[j] = 1
         j += 1
     end
     for i in 1:length(d.marginals)
         if d.cat[i]
-            tmp = quantile(d.marginals[i],cop[i])
+            tmp = quantile(d.marginals[i], cop[i])
             if d.reduce_category
                 if tmp > 1
                     x[j+tmp-2] = 1.0
@@ -106,8 +106,8 @@ function Distributions._rand!(rng::AbstractRNG,d::CovariatesCopula, x::AbstractV
                 j += length(d.marginals[i].p)
             end
         else
-            x[j] = quantile(d.marginals[i],cop[i])
-            j += 1  
+            x[j] = quantile(d.marginals[i], cop[i])
+            j += 1
         end
     end
     return x
@@ -137,20 +137,20 @@ struct CovariatesIndependent <: Sampleable{Multivariate,Continuous}
     cat::BitVector
     intercept::Bool
     reduce_category::Bool
-    function CovariatesIndependent(marginals,intercept=true,reduce_category=true)
+    function CovariatesIndependent(marginals, intercept=true, reduce_category=true)
         if intercept && reduce_category
             reduce_category = true
         else
             reduce_category = false
         end
         len = 0
-        cat = BitVector(zeros(Bool,length(marginals)))
+        cat = BitVector(zeros(Bool, length(marginals)))
         for i in 1:length(marginals)
             if typeof(marginals[i]) <: Categorical
                 cat[i] = true
                 len += length(support(marginals[i]))
                 if reduce_category
-                    len -=1
+                    len -= 1
                 end
             else
                 len += 1
@@ -172,16 +172,16 @@ function marginals(d::CovariatesIndependent)
     return d.marginals
 end
 
-function Distributions._rand!(rng::AbstractRNG,d::CovariatesIndependent, x::AbstractVector{T}) where T<:Real
+function Distributions._rand!(rng::AbstractRNG, d::CovariatesIndependent, x::AbstractVector{T}) where {T<:Real}
     x .= 0.0
     j = 1
     if d.intercept
-        x[j]=1
+        x[j] = 1
         j += 1
     end
     for i in 1:length(d.marginals)
         if d.cat[i]
-            tmp = rand(rng,d.marginals[i])
+            tmp = rand(rng, d.marginals[i])
             if d.reduce_category
                 if tmp > 1
                     x[j+tmp-2] = 1.0
@@ -192,7 +192,7 @@ function Distributions._rand!(rng::AbstractRNG,d::CovariatesIndependent, x::Abst
                 j += length(d.marginals[i].p)
             end
         else
-            x[j] = rand(rng,d.marginals[i])
+            x[j] = rand(rng, d.marginals[i])
             j += 1
         end
     end
@@ -205,7 +205,7 @@ end
 Partition the covariates into indices representing each covariate.
 Categorical covariates are represented by several indices, while others by a single index.
 """
-function covariates_partition(FX::Union{CovariatesCopula, CovariatesIndependent})
+function covariates_partition(FX::Union{CovariatesCopula,CovariatesIndependent})
     partition = Vector{Vector{Int}}(undef, 0)
     index = 1
     if FX.intercept
@@ -213,7 +213,7 @@ function covariates_partition(FX::Union{CovariatesCopula, CovariatesIndependent}
     end
     for i in 1:length(FX.marginals)
         if FX.cat[i]
-            len = length(support(FX.marginals[i]))-FX.reduce_category
+            len = length(support(FX.marginals[i])) - FX.reduce_category
             partition_candidate = collect(index:(index+len-1))
             if !isempty(partition_candidate)
                 push!(partition, partition_candidate)
@@ -253,8 +253,8 @@ function marginals(d::CovariatesInteracted)
     return marginals(d.generator)
 end
 
-function Distributions._rand!(rng::AbstractRNG,d::CovariatesInteracted, x::AbstractVector{T}) where T<:Real
-    X_base = rand(rng,d.generator)
+function Distributions._rand!(rng::AbstractRNG, d::CovariatesInteracted, x::AbstractVector{T}) where {T<:Real}
+    X_base = rand(rng, d.generator)
     for i in eachindex(x)
         x[i] = d.interact_functions[i](X_base)
     end
@@ -288,7 +288,7 @@ OrdinalDiscrete(vs::AbstractVector{T}, ps::AbstractVector{P}; check_args::Bool=t
 OrdinalDiscrete(ps::AbstractVector{P}; check_args::Bool=true) where {P<:Real} =
     OrdinalDiscrete(0:length(ps)-1, ps; check_args=check_args)
 
-Base.eltype(::Type{<:OrdinalDiscrete{T}}) where T = T
+Base.eltype(::Type{<:OrdinalDiscrete{T}}) where {T} = T
 
 Distributions.params(d::OrdinalDiscrete) = params(d.distribution)
 
@@ -303,7 +303,7 @@ end
 Distributions.sampler(d::OrdinalDiscrete) = DiscreteNonParametricSampler(support(d), probs(d))
 
 function Distributions.quantile(d::OrdinalDiscrete, q::Real)
-    return quantile(d.distribution,q)
+    return quantile(d.distribution, q)
 end
 
 end # module CovariatesGeneration

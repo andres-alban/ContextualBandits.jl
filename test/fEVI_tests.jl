@@ -63,12 +63,12 @@ end
 @testset "fEVI policies" begin
     rng = Xoshiro(1234)
     n = 3
-    FX = CovariatesIndependent([Categorical([1/4,1/2,1/4]), OrdinalDiscrete([1/3,1/3,1/3])])
+    FX = CovariatesIndependent([Categorical([1 / 4, 1 / 2, 1 / 4]), OrdinalDiscrete([1 / 3, 1 / 3, 1 / 3])])
     m = length(FX)
-    labeling = [true, false, false, true, 
-                true, true, true, false,
-                true, true, true, false,
-                false, true, true, false]
+    labeling = [true, false, false, true,
+        true, true, true, false,
+        true, true, true, false,
+        false, true, true, false]
     theta0 = rand(rng, sum(labeling))
     Sigma0 = rand(rng, sum(labeling), sum(labeling))
     Sigma0 = Sigma0 * Sigma0'
@@ -95,7 +95,7 @@ end
     @test all(wpost .∈ Ref(1:n))
 
     # The following tests that the policies can be simulated without errors
-    policies = Dict("fEVIoff"=>fEVI_off, "fEVIon" => fEVI_on)
+    policies = Dict("fEVIoff" => fEVI_off, "fEVIon" => fEVI_on)
     mu = rand(rng, sum(labeling))
     outcome_model = OutcomeLinear(n, m, mu, sample_std, labeling)
     r = simulation_stochastic(10, FX, n, T, policies, outcome_model; post_reps=10, rng)

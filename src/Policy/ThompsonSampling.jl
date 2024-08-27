@@ -4,14 +4,14 @@
 Thonpson sampling for linear models to allocate treatment to a patient with covariates `Xt`
 using the linear model with parameters `theta` and `Sigma` and the `labeling` of the covariates.
 """
-function TS_linear(n, theta, Sigma, Xt, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*n)), rng=Random.default_rng())
+function TS_linear(n, theta, Sigma, Xt, labeling=vcat(falses(size(Xt, 1)), trues(size(Xt, 1) * n)), rng=Random.default_rng())
     Sigma_symm = Symmetric(Sigma)
-    mu = randnMv(rng,theta,Sigma_symm)
-    reward = Vector{Float64}(undef,n)
+    mu = randnMv(rng, theta, Sigma_symm)
+    reward = Vector{Float64}(undef, n)
     for w in 1:n
-        reward[w] = interact(w,n,Xt,labeling)' * mu
+        reward[w] = interact(w, n, Xt, labeling)' * mu
     end
-    return argmax_ties(reward,rng)
+    return argmax_ties(reward, rng)
 end
 
 """
@@ -26,24 +26,24 @@ To prevent excessive computation time, `maxiter` is the maximum number of iterat
 
 See [Russo D (2020) Simple Bayesian algorithms for best arm identification. Operations Research 68(6)](https://doi.org/10.1287/opre.2019.1911)
 """
-function TTTS_linear(n, theta, Sigma, Xt, beta=0.5, maxiter=100, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*n)), rng=Random.default_rng())
+function TTTS_linear(n, theta, Sigma, Xt, beta=0.5, maxiter=100, labeling=vcat(falses(size(Xt, 1)), trues(size(Xt, 1) * n)), rng=Random.default_rng())
     Sigma_symm = Symmetric(Sigma)
-    mu = randnMv(rng,theta,Sigma_symm)
-    reward = Vector{Float64}(undef,n)
+    mu = randnMv(rng, theta, Sigma_symm)
+    reward = Vector{Float64}(undef, n)
     for w in 1:n
-        reward[w] = interact(w,n,Xt,labeling)' * mu
+        reward[w] = interact(w, n, Xt, labeling)' * mu
     end
-    I = argmax_ties(reward,rng)
+    I = argmax_ties(reward, rng)
 
-    if (rand(rng)<beta)
+    if (rand(rng) < beta)
         return I
     else
         for _ in 1:maxiter
-            mu = randnMv(rng,theta,Sigma_symm)
+            mu = randnMv(rng, theta, Sigma_symm)
             for w in 1:n
-                reward[w] = interact(w,n,Xt,labeling)' * mu
+                reward[w] = interact(w, n, Xt, labeling)' * mu
             end
-            J = argmax_ties(reward,rng)
+            J = argmax_ties(reward, rng)
             if (J == I)
                 continue
             else
@@ -63,11 +63,11 @@ struct TSPolicyLinear <: PolicyLinear
     model::BayesLinearRegression
 end
 
-function TSPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m),trues(n*m)))
+function TSPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m), trues(n * m)))
     TSPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling))
 end
 
-function allocation(policy::TSPolicyLinear,Xcurrent,W,X,Y,rng=Random.default_rng())
+function allocation(policy::TSPolicyLinear, Xcurrent, W, X, Y, rng=Random.default_rng())
     TS_linear(policy.model.n, policy.model.theta_t, policy.model.Sigma_t, Xcurrent, policy.model.labeling, rng)
 end
 
@@ -85,10 +85,10 @@ struct TTTSPolicyLinear <: PolicyLinear
     maxiter::Int
 end
 
-function TTTSPolicyLinear(n, m, theta0, Sigma0, sample_std, beta, maxiter, labeling=vcat(falses(m),trues(n*m)))
+function TTTSPolicyLinear(n, m, theta0, Sigma0, sample_std, beta, maxiter, labeling=vcat(falses(m), trues(n * m)))
     TTTSPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), beta, maxiter)
 end
 
-function allocation(policy::TTTSPolicyLinear,Xcurrent,W,X,Y,rng=Random.default_rng())
+function allocation(policy::TTTSPolicyLinear, Xcurrent, W, X, Y, rng=Random.default_rng())
     TTTS_linear(policy.model.n, policy.model.theta_t, policy.model.Sigma_t, Xcurrent, policy.beta, policy.maxiter, policy.model.labeling, rng)
 end
