@@ -37,7 +37,7 @@ end
     recorder = ContextualBandits.StandardRecorder()
     ContextualBandits.initialize!(recorder, T, n, size(X,1), delay, size(X_post,2), X_post_weights, size(Xinterest,2))
     ContextualBandits.reset!(recorder,outcome_model,X_post,Xinterest)
-    rng = MersenneTwister(1234)
+    rng = Xoshiro(1234)
     x = ContextualBandits.replication_stochastic(X,X_post,Z,n,delay,policy,outcome_model,recorder;Xinterest=Xinterest,X_post_weights=X_post_weights,rng=rng)
     names = ContextualBandits.output_recorder_names(recorder)
     @test all(x[findfirst(names .== "regret_on")] .>= 0.0)
@@ -87,7 +87,7 @@ end
     weights = ones(post_reps)./post_reps
     ContextualBandits.initialize!(recorder, T, n, length(FX), delay, post_reps, weights, size(Xinterest,2))
     aggregators = aggregators = [ContextualBandits.StandardResultsAggregator(ContextualBandits.output_recorder(recorder),ContextualBandits.output_recorder_names(recorder)) for _ in policies]
-    rng = MersenneTwister(1234)
+    rng = Xoshiro(1234)
     x = ContextualBandits.simulation_stochastic_internal(FX,FXtilde,n,T,delay,policies,outcome_model,
         reps, post_reps, recorder, aggregators, pilot_samples_per_treatment, Xinterest, rng, false)
     y = ContextualBandits.asdict(x[2])
@@ -134,7 +134,7 @@ end
     post_reps = 10
     pilot_samples_per_treatment = 0
     Xinterest = rand(FXtilde,2)
-    rng = MersenneTwister(1234)
+    rng = Xoshiro(1234)
     x = simulation_stochastic(reps, FX,n,T,policies,outcome_model; FXtilde, delay,
         post_reps=post_reps, pilot_samples_per_treatment = pilot_samples_per_treatment,Xinterest=Xinterest,rng=rng,verbose=true)
     y = x["output"]["random"]
@@ -185,7 +185,7 @@ end
     post_reps = 10
     pilot_samples_per_treatment = 0
     Xinterest = rand(FXtilde,2)
-    rng = MersenneTwister(1234)
+    rng = Xoshiro(1234)
     x = simulation_stochastic_parallel(reps,FX,n,T,policies,outcome_model; FXtilde, delay,
         post_reps=post_reps, pilot_samples_per_treatment = pilot_samples_per_treatment,Xinterest=Xinterest,rng=rng,verbose=true)
     y = x["output"]["greedy"]

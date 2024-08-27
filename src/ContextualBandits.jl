@@ -2,7 +2,6 @@ module ContextualBandits
 using Random
 using LinearAlgebra
 using Statistics
-import Future.randjump
 using Distributed
 using Distributions
 using GLMNet

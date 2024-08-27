@@ -29,7 +29,7 @@ function initialize!(policy::DiscretizePolicy, W, X, Y)
     return
 end
 
-function state_update!(policy::DiscretizePolicy, W, X, Y, rng=Random.GLOBAL_RNG)
+function state_update!(policy::DiscretizePolicy, W, X, Y, rng=Random.default_rng())
     for i in (size(policy.X_discrete, 2)+1):size(X, 2)
         policy.X_discrete = hcat(policy.X_discrete, X_discretize(view(X, :, i), policy))
     end
@@ -45,7 +45,7 @@ function implementation(policy::DiscretizePolicy, X_post, W, X, Y)
     return implementation(policy.subpolicy, X_post_discrete, W, policy.X_discrete, Y)
 end
 
-function allocation(policy::DiscretizePolicy, Xcurrent, W, X, Y, rng=Random.GLOBAL_RNG)
+function allocation(policy::DiscretizePolicy, Xcurrent, W, X, Y, rng=Random.default_rng())
     X_current_discrete = X_discretize(Xcurrent, policy)
     return allocation(policy.subpolicy, X_current_discrete, W, policy.X_discrete, Y, rng)
 end

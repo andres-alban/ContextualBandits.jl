@@ -118,7 +118,7 @@ function BiasedCoinPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{Cova
     BiasedCoinPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), predictive, prognostic, p, weights, target_fraction)
 end
 
-function allocation(policy::BiasedCoinPolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
+function allocation(policy::BiasedCoinPolicyLinear,Xcurrent,W,X,Y,rng=Random.default_rng())
     index_subgroup = [view(X, policy.predictive,i) == view(Xcurrent, policy.predictive) for i in axes(X,2)]
     W_subgroup = view(W, index_subgroup)
     X_subgroup = view(X, :, index_subgroup)
@@ -184,7 +184,7 @@ function RABC_OCBA_PolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{Cova
     RABC_OCBA_PolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), predictive, prognostic, p, weights)
 end
 
-function allocation(policy::RABC_OCBA_PolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
+function allocation(policy::RABC_OCBA_PolicyLinear,Xcurrent,W,X,Y,rng=Random.default_rng())
     index_subgroup = [view(X, policy.predictive,i) == view(Xcurrent, policy.predictive) for i in axes(X,2)]
     W_subgroup = view(W, index_subgroup)
     X_subgroup = view(X, :, index_subgroup)

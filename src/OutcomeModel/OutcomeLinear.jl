@@ -37,7 +37,7 @@ struct OutcomeLinearBayes <: OutcomeModel
     end
 end
 
-function outcome_model_state!(outcome_model::OutcomeLinearBayes,rng::AbstractRNG=Random.GLOBAL_RNG)
+function outcome_model_state!(outcome_model::OutcomeLinearBayes,rng::AbstractRNG=Random.default_rng())
     outcome_model.mu .= randnMv(rng, outcome_model.theta0, outcome_model.Sigma0)
     return
 end
@@ -50,7 +50,7 @@ function noisy_outcome(outcome_model::OutcomeLinearBayes,W,X,Z)
     return mean_outcome(outcome_model,W,X) + outcome_model.sample_std*Z
 end
 
-function noise_outcome(outcome_model::OutcomeLinearBayes,rng::AbstractRNG=Random.GLOBAL_RNG)
+function noise_outcome(outcome_model::OutcomeLinearBayes,rng::AbstractRNG=Random.default_rng())
     return randn(rng)
 end
 
@@ -88,7 +88,7 @@ struct OutcomeLinear <: OutcomeModel
     end
 end
 
-function outcome_model_state!(outcome_model::OutcomeLinear,rng::AbstractRNG=Random.GLOBAL_RNG)
+function outcome_model_state!(outcome_model::OutcomeLinear,rng::AbstractRNG=Random.default_rng())
     return
 end
 
@@ -100,6 +100,6 @@ function noisy_outcome(outcome_model::OutcomeLinear,W,X,Z)
     return mean_outcome(outcome_model,W,X) + outcome_model.sample_std*Z
 end
 
-function noise_outcome(outcome_model::OutcomeLinear,rng::AbstractRNG=Random.GLOBAL_RNG)
+function noise_outcome(outcome_model::OutcomeLinear,rng::AbstractRNG=Random.default_rng())
     return randn(rng)
 end

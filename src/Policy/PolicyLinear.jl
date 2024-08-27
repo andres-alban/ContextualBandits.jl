@@ -19,7 +19,7 @@ function initialize!(policy::PolicyLinear,W=Int[],X=Float64[],Y=Float64[])
     end
 end
 
-function state_update!(policy::PolicyLinear,W,X,Y,rng=Random.GLOBAL_RNG)
+function state_update!(policy::PolicyLinear,W,X,Y,rng=Random.default_rng())
     t = length(Y)
     if t > 0
         state_update!(policy.model,W[t],view(X,:,t),Y[t])
@@ -54,7 +54,7 @@ function RandomPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(fals
     RandomPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling))
 end
 
-function allocation(policy::RandomPolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
+function allocation(policy::RandomPolicyLinear,Xcurrent,W,X,Y,rng=Random.default_rng())
     rand(rng,1:policy.model.n)
 end
 
@@ -73,6 +73,6 @@ function GreedyPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(fals
     GreedyPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling))
 end
 
-function allocation(policy::GreedyPolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
+function allocation(policy::GreedyPolicyLinear,Xcurrent,W,X,Y,rng=Random.default_rng())
     return argmax_ties([interact(iw, policy.model.n, Xcurrent, policy.model.labeling)' * policy.model.theta_t for iw in 1:policy.model.n], rng)
 end

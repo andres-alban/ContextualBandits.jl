@@ -1,10 +1,10 @@
 """
-    TS_linear(n, theta, Sigma, Xt, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*n)), rng=Random.GLOBAL_RNG)
+    TS_linear(n, theta, Sigma, Xt, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*n)), rng=Random.default_rng())
 
 Thonpson sampling for linear models to allocate treatment to a patient with covariates `Xt`
 using the linear model with parameters `theta` and `Sigma` and the `labeling` of the covariates.
 """
-function TS_linear(n, theta, Sigma, Xt, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*n)), rng=Random.GLOBAL_RNG)
+function TS_linear(n, theta, Sigma, Xt, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*n)), rng=Random.default_rng())
     Sigma_symm = Symmetric(Sigma)
     mu = randnMv(rng,theta,Sigma_symm)
     reward = Vector{Float64}(undef,n)
@@ -15,7 +15,7 @@ function TS_linear(n, theta, Sigma, Xt, labeling=vcat(falses(size(Xt,1)),trues(s
 end
 
 """
-    TTTS_linear(n, theta, Sigma, Xt, beta=0.5, maxiter=100, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*n)), rng=Random.GLOBAL_RNG)
+    TTTS_linear(n, theta, Sigma, Xt, beta=0.5, maxiter=100, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*n)), rng=Random.default_rng())
 
 Top-Two Thompson Sampling for linear models to allocate treatment to a patient with covariates `Xt`
 using the linear model with parameters `theta` and `Sigma` and the `labeling` of the covariates.
@@ -26,7 +26,7 @@ To prevent excessive computation time, `maxiter` is the maximum number of iterat
 
 See [Russo D (2020) Simple Bayesian algorithms for best arm identification. Operations Research 68(6)](https://doi.org/10.1287/opre.2019.1911)
 """
-function TTTS_linear(n, theta, Sigma, Xt, beta=0.5, maxiter=100, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*n)), rng=Random.GLOBAL_RNG)
+function TTTS_linear(n, theta, Sigma, Xt, beta=0.5, maxiter=100, labeling=vcat(falses(size(Xt,1)),trues(size(Xt,1)*n)), rng=Random.default_rng())
     Sigma_symm = Symmetric(Sigma)
     mu = randnMv(rng,theta,Sigma_symm)
     reward = Vector{Float64}(undef,n)
@@ -67,7 +67,7 @@ function TSPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling=vcat(falses(m
     TSPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling))
 end
 
-function allocation(policy::TSPolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
+function allocation(policy::TSPolicyLinear,Xcurrent,W,X,Y,rng=Random.default_rng())
     TS_linear(policy.model.n, policy.model.theta_t, policy.model.Sigma_t, Xcurrent, policy.model.labeling, rng)
 end
 
@@ -89,6 +89,6 @@ function TTTSPolicyLinear(n, m, theta0, Sigma0, sample_std, beta, maxiter, label
     TTTSPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), beta, maxiter)
 end
 
-function allocation(policy::TTTSPolicyLinear,Xcurrent,W,X,Y,rng=Random.GLOBAL_RNG)
+function allocation(policy::TTTSPolicyLinear,Xcurrent,W,X,Y,rng=Random.default_rng())
     TTTS_linear(policy.model.n, policy.model.theta_t, policy.model.Sigma_t, Xcurrent, policy.beta, policy.maxiter, policy.model.labeling, rng)
 end

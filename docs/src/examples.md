@@ -129,7 +129,7 @@ Xinterest = [
 ]
 
 # run simulation
-rng = MersenneTwister(121)
+rng = Xoshiro(121)
 results = @time simulation_stochastic_parallel(reps, FX, n, T, policies, outcome_model;
     FXtilde = FXtilde, delay = delay, post_reps=post_reps, rng=rng, Xinterest=Xinterest)
 

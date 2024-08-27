@@ -39,7 +39,7 @@ function simulation_stochastic_internal(FX, FXtilde, n, T, delay, policies, outc
             rand!(rng,FX,Xpilot)
             Ypilot .= [noisy_outcome(outcome_model, Wpilot[i], view(Xpilot, :, i), noise_outcome(outcome_model,rng)) for i in eachindex(Wpilot)]
         end
-        rng_policy = MersenneTwister(abs(rand(rng,Int)))
+        rng_policy = Xoshiro(abs(rand(rng,Int)))
         for (ip,policy) in enumerate(policies)
             initialize!(policy,Wpilot,Xpilot,Ypilot)
             reset!(recorder,outcome_model,X_post,Xinterest)
@@ -83,7 +83,7 @@ end
 """
     simulation_stochastic(reps, FX, n, T, policies, outcome_model;
         FXtilde=FX, delay=0, post_reps=0, pilot_samples_per_treatment = 0,
-        Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
+        Xinterest=zeros(length(FX),0), rng=Random.default_rng(), verbose=false)
 
 Simulate trials and record metrics.
 
@@ -101,7 +101,7 @@ Simulate trials and record metrics.
 - `post_reps`: Number of replications for post-trial covariates.
 - `pilot_samples_per_treatment`: Number of pilot samples per treatment to build a prior distribution before the start of the trial. Default is 0.
 - `Xinterest`: Covariates of interest for which specific . Default is an empty matrix.
-- `rng`: Random number generator. Default is `Random.GLOBAL_RNG`.
+- `rng`: Random number generator. Default is `Random.default_rng()`.
 - `verbose`: Print progress of the simulation. Default is `false`.
 
 # Returns
@@ -110,7 +110,7 @@ A dictionary with the input arguments and the output of the simulation for each 
 function simulation_stochastic(reps, FX, n, T, policies, outcome_model;
     FXtilde=FX, delay=0,
     post_reps=0, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,
-    Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
+    Xinterest=zeros(length(FX),0), rng=Random.default_rng(), verbose=false)
 
     policy_labels = try
         [string(j) for j in keys(policies)]
@@ -136,7 +136,7 @@ end
 """
     simulation_stochastic_parallel(reps, FX, n, T, policies, outcome_model;
         FXtilde=FX, delay=0, post_reps=0, pilot_samples_per_treatment = 0,
-        Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
+        Xinterest=zeros(length(FX),0), rng=Random.default_rng(), verbose=false)
 
 Parallel version of [simulation_stochastic](@ref). The simulation is distributed among all available workers.
 
@@ -154,7 +154,7 @@ results = simulation_stochastic_parallel(FX, n, T, policies, outcome_model)
 function simulation_stochastic_parallel(reps, FX, n, T, policies, outcome_model;
     FXtilde=FX, delay=0,
     post_reps=0, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment = 0,
-    Xinterest=zeros(length(FX),0), rng=Random.GLOBAL_RNG, verbose=false)
+    Xinterest=zeros(length(FX),0), rng=Random.default_rng(), verbose=false)
 
     policy_labels = try
         [string(j) for j in keys(policies)]
@@ -169,11 +169,11 @@ function simulation_stochastic_parallel(reps, FX, n, T, policies, outcome_model;
     reps_per_worker = div(reps,nwrkrs)
     rem_reps = reps % nwrkrs # remaining reps will be distributed among the first workers that receive the task
     for (i,w) in enumerate(wrkrs)
-        rng = randjump(rng, big(10)^20)
+        rng_worker = Xoshiro(abs(rand(rng, Int)))
         repsworker = reps_per_worker + (rem_reps > 0)
         futures[i] = @spawnat w simulation_stochastic_internal(FX, FXtilde, n, T, delay, policy_values, outcome_model,
             repsworker, post_reps, recorder, aggregators, pilot_samples_per_treatment,
-            Xinterest, rng, verbose)
+            Xinterest, rng_worker, verbose)
         rem_reps -= 1
     end
 

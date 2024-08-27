@@ -23,7 +23,7 @@ using Test
     fEVI_infer = InferLabelingPolicy(fEVI,labeling_selector,schedule)
     policies = Dict( "fEVI_infer" => fEVI_infer, "fEVI" => fEVI)
 
-    rng = MersenneTwister(1234)
+    rng = Xoshiro(1234)
     outcome_model = OutcomeLinear(n, m, rand(rng,sum(labeling)), sample_std, labeling)
 
     results = simulation_stochastic(10,FX,n,T,policies,outcome_model,post_reps=10,rng=rng)
@@ -53,7 +53,7 @@ end
     fEVIMC_infer = InferLabelingPolicy(fEVIMC,labeling_selector,schedule)
     policies = Dict("fEVIMC_infer" => fEVIMC_infer, "fEVIMC" => fEVIMC)
 
-    rng = MersenneTwister(1234)
+    rng = Xoshiro(1234)
     outcome_model = OutcomeLinear(n, m, rand(rng,sum(labeling)), sample_std, labeling)
 
     results = simulation_stochastic(10,FX,n,T,policies,outcome_model,post_reps=10,rng=rng)

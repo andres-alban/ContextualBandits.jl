@@ -43,7 +43,7 @@ function initialize!(policy::InferLabelingPolicy, W, X, Y)
     return
 end
 
-function state_update!(policy::InferLabelingPolicy, W, X, Y, rng=Random.GLOBAL_RNG)
+function state_update!(policy::InferLabelingPolicy, W, X, Y, rng=Random.default_rng())
     index = length(Y)
     if index in policy.schedule && index > 0
         policy.subpolicy.model.labeling .= labeling_selection(policy.labeling_selector, W, X, Y)
@@ -66,7 +66,7 @@ function implementation(policy::InferLabelingPolicy, X_post, W, X, Y)
     return implementation(policy.subpolicy, X_post, W, X, Y)
 end
 
-function allocation(policy::InferLabelingPolicy, Xcurrent, W, X, Y, rng=Random.GLOBAL_RNG)
+function allocation(policy::InferLabelingPolicy, Xcurrent, W, X, Y, rng=Random.default_rng())
     return allocation(policy.subpolicy, Xcurrent, W, X, Y, rng)
 end
 
