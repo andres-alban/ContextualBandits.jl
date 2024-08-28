@@ -15,6 +15,7 @@ All instances of `PolicyLinear` use [Bayesian linear regression](@ref) and thus 
 
 ```@docs
 fEVI_MC_PolicyLinear
+fEVI_MC_OnOff_PolicyLinear
 ```
 
 ```@docs

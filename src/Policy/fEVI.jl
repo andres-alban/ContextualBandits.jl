@@ -100,11 +100,12 @@ end
 function allocation(policy::fEVIDiscreteOnOff, Xcurrent, W, X, Y, rng=Random.default_rng())
     g = X2g(Xcurrent, policy.model.FX)
     t = length(W)
+    weight_on = max(policy.T - t - 1, 0)
     expected_outcomes = policy.model.theta_t[treatment_g2index.(1:policy.model.n, g, policy.model.gn)]
     expected_outcomes .-= minimum(expected_outcomes) - 1 # shift expected outcomes so that the worst is 1 and we can take the logarithm
     log_expected_outcomes = log.(expected_outcomes)
     lognu = fEVI(policy.model.n, policy.model.gn, policy.model.theta_t, policy.model.Sigma_t, policy.model.sample_std, g, policy.model.p)
-    lognu_on = logSumExp.(log_expected_outcomes, log(policy.T - t - 1) .+ lognu)
+    lognu_on = logSumExp.(log_expected_outcomes, log(weight_on) .+ lognu)
     lognu_combined = logSumExp.(lognu_on, log(policy.P) .+ lognu)
     return argmax_ties(lognu_combined, rng)
 end
