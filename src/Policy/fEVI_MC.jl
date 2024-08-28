@@ -19,7 +19,6 @@ function fEVI_MC(n, m, theta, Sigma, sample_std, Xt, FXtilde, Wpipeline, Xpipeli
         interact!(WkronX, w, n, Xt, labeling)
         s = WkronX' * Sigma_temp * WkronX
         if s < 0
-            println(Sigma_temp)
             sigmatilde[:, w] .= 0
         else
             sigmatilde[:, w] = Sigma_temp * WkronX ./ sqrt(sample_std + s)

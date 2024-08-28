@@ -46,6 +46,8 @@ export OCBAPolicyLinear
 include("Policy/biasedcoin.jl")
 export BiasedCoinPolicyLinear, RABC_OCBA_PolicyLinear
 
+include("Policy/RandEpsilon.jl")
+export RandEpsilon
 include("Policy/LabelingSelector.jl")
 export LabelingSelector, LassoCVLabelingSelector
 include("Policy/InferLabelingPolicy.jl")

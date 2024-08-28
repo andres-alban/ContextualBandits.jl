@@ -79,3 +79,41 @@ end
     @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
     @test all(ContextualBandits.implementation(policy, Xt, W, X, Y) .∈ Ref(1:n))
 end
+
+@testset "fEVI-MC-simple family policies" begin
+    rng = Xoshiro(1234)
+    n = 3
+    FXtilde = CovariatesIndependent([Categorical(1 / 3, 1 / 3, 1 / 3), Normal()])
+    m = length(FXtilde)
+    labeling = vcat(falses(m), trues(n * m))
+    theta0 = rand(rng, sum(labeling))
+    Sigma0 = rand(rng, sum(labeling), sum(labeling))
+    Sigma0 = Sigma0 * Sigma0'
+    sample_std = 1.0
+    etaon = 10
+    etaoff = 10
+    policy = ContextualBandits.fEVI_MC_simple_PolicyLinear(n, m, theta0, Sigma0, sample_std, FXtilde, etaon, etaoff, labeling)
+    ContextualBandits.initialize!(policy)
+    W = [1]
+    X = rand(rng, FXtilde, 1)
+    Y = rand(rng, 1)
+    Xt = rand(rng, FXtilde)
+    @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
+    ContextualBandits.state_update!(policy, W, X, Y, rng)
+    @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
+    @test all(ContextualBandits.implementation(policy, Xt, W, X, Y) .∈ Ref(1:n))
+
+    T = 10
+    delay = 0
+    P = 10
+    policy = ContextualBandits.fEVI_MC_OnOff_simple_PolicyLinear(n, m, theta0, Sigma0, sample_std, FXtilde, etaon, etaoff, T, delay, P, labeling)
+    ContextualBandits.initialize!(policy)
+    W = [1]
+    X = rand(rng, FXtilde, 1)
+    Y = rand(rng, 1)
+    Xt = rand(rng, FXtilde)
+    @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
+    ContextualBandits.state_update!(policy, W, X, Y, rng)
+    @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
+    @test all(ContextualBandits.implementation(policy, Xt, W, X, Y) .∈ Ref(1:n))
+end
