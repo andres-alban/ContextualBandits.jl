@@ -64,6 +64,54 @@ end
     @test all(x[findfirst(names .== "sum_labeling")] .== sum(labeling))
 end
 
+@testset "simulation_replication StandardRecorder with delay" begin
+    T = 20
+    m = 10
+    n = 5
+    X = rand(m, T)
+    X_post = rand(m, 4)
+    Z = rand(T)
+    delay = 10
+    labeling = ones(Bool, (n + 1) * m)
+    theta0 = zeros(sum(labeling))
+    Sigma0 = Diagonal(ones(sum(labeling)))
+    sample_std = 1.0
+    policy = RandomPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling)
+    ContextualBandits.initialize!(policy, [], [], [])
+    outcome_model = OutcomeLinearBayes(n, m, theta0, Sigma0, sample_std, labeling)
+    ContextualBandits.outcome_model_state!(outcome_model)
+    Xinterest = X[:, 3:4]
+    X_post_weights = ones(4) ./ 4
+    recorder = ContextualBandits.StandardRecorder()
+    ContextualBandits.initialize!(recorder, T, n, size(X, 1), delay, size(X_post, 2), X_post_weights, size(Xinterest, 2))
+    ContextualBandits.reset!(recorder, outcome_model, X_post, Xinterest)
+    rng = Xoshiro(1234)
+    x = ContextualBandits.replication_stochastic(X, X_post, Z, n, delay, policy, outcome_model, recorder; Xinterest=Xinterest, X_post_weights=X_post_weights, rng=rng)
+    names = ContextualBandits.output_recorder_names(recorder)
+    @test all(x[findfirst(names .== "regret_on")] .>= 0.0)
+    @test all(cumsum(x[findfirst(names .== "regret_on")]) .≈ x[findfirst(names .== "cumulregret_on")])
+    @test all(x[findfirst(names .== "PICS_on")] .∈ Ref([0, 1]))
+    @test all(x[findfirst(names .== "PICS_on")][x[findfirst(names .== "regret_on")].==0.0] .== 0)
+    @test all(cumsum(x[findfirst(names .== "PICS_on")]) .== x[findfirst(names .== "cumulPICS_on")])
+    @test all(sum(x[findfirst(names .== "Wfrac_on")], dims=2) .== 1)
+    @test all(x[findfirst(names .== "regret_off")] .>= 0.0)
+    @test all(0 .<= x[findfirst(names .== "PICS_off")] .<= 1)
+    @test all(x[findfirst(names .== "PICS_off")][x[findfirst(names .== "regret_off")].==0.0] .== 0)
+    @test all(sum(x[findfirst(names .== "Wfrac_off")], dims=2) .== 1)
+    @test all((x[findfirst(names .== "Xregret_on")] .>= 0.0) .| isnan.(x[findfirst(names .== "Xregret_on")]))
+    @test all((x[findfirst(names .== "XPICS_on")] .∈ Ref([0, 1])) .| isnan.(x[findfirst(names .== "XPICS_on")]))
+    @test all(x[findfirst(names .== "XPICS_on")][x[findfirst(names .== "Xregret_on")].==0.0] .== 0)
+    @test all(x[findfirst(names .== "Xfrac_on")] .∈ Ref([0, 1]))
+    @test all(x[findfirst(names .== "XWfrac_on")] .∈ Ref([0, 1]))
+    @test all(x[findfirst(names .== "Xregret_off")] .>= 0.0)
+    @test all(x[findfirst(names .== "XPICS_off")] .∈ Ref([0, 1]))
+    @test all(x[findfirst(names .== "XPICS_off")][x[findfirst(names .== "Xregret_off")].==0.0] .== 0)
+    @test all(x[findfirst(names .== "XWfrac_off")] .∈ Ref([0, 1]))
+    @test all(sum(x[findfirst(names .== "XWfrac_off")], dims=2) .== 1)
+    @test all(x[findfirst(names .== "labeling_frac")] .== labeling)
+    @test all(x[findfirst(names .== "sum_labeling")] .== sum(labeling))
+end
+
 @testset "simulation_stochastic_internal" begin
     FX = CovariatesIndependent([Normal(), Normal()])
     FXtilde = FX

@@ -146,21 +146,21 @@ function record!(sr::StandardRecorder, t, outcome_model, policy, Wcurrent, Xcurr
         treat_post = implementation(policy, X_post, W, X, Y)
         for k in axes(X_post, 2) # loop over patients post-trial
             x = sr.max_mean_outcome_post[k] - mean_outcome(outcome_model, treat_post[k], view(X_post, :, k))
-            sr.regret_off[t+1] += sr.X_post_weights[k] * x
-            sr.PICS_off[t+1] += sr.X_post_weights[k] * (x > 0)
-            sr.Wfrac_off[t+1, treat_post[k]] += sr.X_post_weights[k]
+            sr.regret_off[t-sr.delay+1] += sr.X_post_weights[k] * x
+            sr.PICS_off[t-sr.delay+1] += sr.X_post_weights[k] * (x > 0)
+            sr.Wfrac_off[t-sr.delay+1, treat_post[k]] += sr.X_post_weights[k]
         end
 
         Xtreat_post = implementation(policy, Xinterest, W, X, Y)
         for k in 1:size(Xinterest, 2) # loop over patients with Xinterest covariates
             x = sr.Xmax_mean_outcome_post[k] - mean_outcome(outcome_model, Xtreat_post[k], view(Xinterest, :, k))
-            sr.Xregret_off[t+1, k] = x
-            sr.XPICS_off[t+1, k] = (x > 0)
-            sr.XWfrac_off[t+1, Xtreat_post[k], k] = 1
+            sr.Xregret_off[t-sr.delay+1, k] = x
+            sr.XPICS_off[t-sr.delay+1, k] = (x > 0)
+            sr.XWfrac_off[t-sr.delay+1, Xtreat_post[k], k] = 1
         end
 
         # compute the number of active terms in labeling
-        sr.sum_labeling[t+1] = try
+        sr.sum_labeling[t-sr.delay+1] = try
             sum(policy_labeling(policy))
         catch
             0
