@@ -38,7 +38,7 @@ include("Policy/fEVI.jl")
 export fEVI, fEVIDiscrete, fEVIDiscreteOnOff
 include("Policy/fEVI_MC.jl")
 include("Policy/fEVI_MC_without_h.jl")
-export fEVI_MC, fEVI_MC_PolicyLinear
+export fEVI_MC, fEVI_MC_PolicyLinear, fEVI_MC_OnOff_PolicyLinear
 include("Policy/ThompsonSampling.jl")
 export TSPolicyLinear, TTTSPolicyLinear
 include("Policy/ocba.jl")

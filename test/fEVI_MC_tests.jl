@@ -64,4 +64,18 @@ end
     ContextualBandits.state_update!(policy, W, X, Y, rng)
     @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
     @test all(ContextualBandits.implementation(policy, Xt, W, X, Y) .∈ Ref(1:n))
+
+    T = 10
+    delay = 0
+    P = 10
+    policy = fEVI_MC_OnOff_PolicyLinear(n, m, theta0, Sigma0, sample_std, FXtilde, etaon, etaoff, T, delay, P, labeling)
+    ContextualBandits.initialize!(policy)
+    W = [1]
+    X = rand(rng, FXtilde, 1)
+    Y = rand(rng, 1)
+    Xt = rand(rng, FXtilde)
+    @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
+    ContextualBandits.state_update!(policy, W, X, Y, rng)
+    @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
+    @test all(ContextualBandits.implementation(policy, Xt, W, X, Y) .∈ Ref(1:n))
 end

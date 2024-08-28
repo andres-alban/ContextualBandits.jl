@@ -41,12 +41,8 @@ struct LassoCVLabelingSelector <: LabelingSelector
     m::Int
     factor::Float64
     labeling_base::BitVector
-    function LassoCVLabelingSelector(n, m, factor=0.0, labeling_base=falses(0))
-        if isempty(labeling_base)
-            labeling_base = trues((n + 1) * m)
-        else
-            (n + 1) * m == length(labeling_base) || throw(ArgumentError("labeling_base is the wrong length: expected length=$((n+1)*m) vs. actual length=$(length(labeling_base))"))
-        end
+    function LassoCVLabelingSelector(n, m, factor=0.0, labeling_base=trues((n + 1) * m))
+        (n + 1) * m == length(labeling_base) || throw(ArgumentError("labeling_base is the wrong length: expected length=$((n+1)*m) vs. actual length=$(length(labeling_base))"))
         new(n, m, factor, labeling_base)
     end
 end
