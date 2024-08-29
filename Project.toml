@@ -3,6 +3,9 @@ uuid = "b30de75d-69a8-450b-96d3-f36be60bd625"
 authors = ["Andres Alban", "Stephen E. Chick", "Spyros I. Zoumpoulis"]
 version = "0.1.0"
 
+[compat]
+julia = "1.7"
+
 [deps]
 Copulas = "ae264745-0b69-425e-9d9d-cf662c5eec93"
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"

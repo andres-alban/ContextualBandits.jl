@@ -130,7 +130,7 @@ function initialize!(model::BayesLinearRegressionDiscrete, W=Int[], X=Float64[],
     if length(Y) > 0
         WX = interact(W, model.n, X, model.labeling)
         theta, Sigma = BayesUpdateNormal(model.theta0, model.Sigma0, WX, Y, model.sample_std)
-        robustify_prior!(theta, Sigma, model.n, model.labeling)
+        robustify_prior_linear!(theta, Sigma, model.n, model.m, model.labeling)
         model.theta_t, model.Sigma_t = X2g_prior(theta, Sigma, model.FX, model.labeling, model.n)
     else
         model.theta_t, model.Sigma_t = X2g_prior(model.theta0, model.Sigma0, model.FX, model.labeling, model.n)

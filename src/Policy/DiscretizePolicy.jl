@@ -21,7 +21,7 @@ end
 function initialize!(policy::DiscretizePolicy, W, X, Y)
     policy.X_discrete = Matrix{Float64}(undef, length(policy.FX), 0)
 
-    X_discrete = similar(X)
+    X_discrete = similar(X, Float64)
     for i in axes(X, 2)
         X_discrete[:, i] = X_discretize(view(X, :, i), policy)
     end
@@ -38,7 +38,7 @@ function state_update!(policy::DiscretizePolicy, W, X, Y, rng=Random.default_rng
 end
 
 function implementation(policy::DiscretizePolicy, X_post, W, X, Y)
-    X_post_discrete = similar(X_post)
+    X_post_discrete = similar(X_post, Float64)
     for k in axes(X_post, 2)
         X_post_discrete[:, k] = X_discretize(view(X_post, :, k), policy)
     end
@@ -99,11 +99,12 @@ function discretize(x, breakpoints, values)
 end
 
 function X_discretize(X, policy::DiscretizePolicy)
-    X_discrete = copy(X)
+    X_discrete = similar(X, Float64)
     index = 1
     for i in eachindex(marginals(policy.FX))
         m = marginals(policy.FX)[i]
         if typeof(m) <: Categorical
+            X_discrete[index+1:index+length(support(m))-1] .= X[index+1:index+length(support(m))-1]
             index += length(support(m)) - 1
         elseif typeof(m) <: OrdinalDiscrete
             index += 1
