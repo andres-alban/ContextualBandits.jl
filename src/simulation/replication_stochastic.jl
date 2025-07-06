@@ -33,7 +33,7 @@ function replication_stochastic(X, X_post, Z, n, delay, policy, outcome_model, r
         Yav = view(Y, 1:(t-delay))
 
         # Update state of policy
-        state_update!(policy, Wav, Xav, Yav, rng)
+        state_update!(policy, Wav, Xav, Yav)
 
         # record metrics
         w = 1 <= t <= T ? W[t] : NaN

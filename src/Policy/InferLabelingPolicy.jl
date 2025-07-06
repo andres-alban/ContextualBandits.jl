@@ -43,7 +43,7 @@ function initialize!(policy::InferLabelingPolicy, W, X, Y)
     return
 end
 
-function state_update!(policy::InferLabelingPolicy, W, X, Y, rng=Random.default_rng())
+function state_update!(policy::InferLabelingPolicy, W, X, Y)
     index = length(Y)
     if index in policy.schedule && index > 0
         policy.subpolicy.model.labeling .= labeling_selection(policy.labeling_selector, W, X, Y)
@@ -54,10 +54,10 @@ function state_update!(policy::InferLabelingPolicy, W, X, Y, rng=Random.default_
         policy.subpolicy.model.Sigma0 = Sigma
         initialize!(policy.subpolicy, policy.Wpilot, policy.Xpilot, policy.Ypilot)
         for i in 1:index
-            state_update!(policy.subpolicy, W, X, view(Y, 1:i), rng)
+            state_update!(policy.subpolicy, W, X, view(Y, 1:i))
         end
     else
-        state_update!(policy.subpolicy, W, X, Y, rng)
+        state_update!(policy.subpolicy, W, X, Y)
     end
     return
 end

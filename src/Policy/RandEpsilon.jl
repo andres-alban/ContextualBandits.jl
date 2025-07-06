@@ -14,11 +14,11 @@ function initialize!(policy::RandEpsilon, W, X, Y)
     initialize!(policy.subpolicy, W, X, Y)
 end
 
-function state_update!(policy::RandEpsilon, W, X, Y, rng=Random.default_rng())
+function state_update!(policy::RandEpsilon, W, X, Y)
     state_update!(policy.subpolicy, W, X, Y)
 end
 
-function allocation(policy::RandEpsilon, Xcurrent, W, X, Y, rng=Random.GLOBAL_RNG)
+function allocation(policy::RandEpsilon, Xcurrent, W, X, Y, rng=Random.default_rng())
     if rand(rng) < policy.epsilon
         return rand(rng, 1:policy.n)
     else

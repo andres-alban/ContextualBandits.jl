@@ -19,7 +19,7 @@ function initialize!(policy::PolicyLinear, W=Int[], X=Float64[], Y=Float64[])
     end
 end
 
-function state_update!(policy::PolicyLinear, W, X, Y, rng=Random.default_rng())
+function state_update!(policy::PolicyLinear, W, X, Y)
     t = length(Y)
     if t > 0
         state_update!(policy.model, W[t], view(X, :, t), Y[t])

@@ -18,7 +18,7 @@ using Test
     Xcurrent = [1.0, 2.0, 5.0]
     w = ContextualBandits.allocation(policy, Xcurrent, [], [], [], rng)
     @test w in 1:n
-    ContextualBandits.state_update!(policy, w, Xcurrent, 1.0, rng)
+    ContextualBandits.state_update!(policy, w, Xcurrent, 1.0)
     @test policy.model.theta_t ≈ BayesUpdateNormal(theta0, Sigma0, interact(w, n, Xcurrent, labeling), 1.0, sample_std)[1]
     @test all(ContextualBandits.implementation(policy, Xcurrent, [], [], []) .∈ Ref(1:n))
 end
@@ -40,7 +40,7 @@ end
     Xcurrent = [1.0, 2.0, 5.0]
     w = ContextualBandits.allocation(policy, Xcurrent, [], [], [], rng)
     @test w in 1:n
-    ContextualBandits.state_update!(policy, w, Xcurrent, 1.0, rng)
+    ContextualBandits.state_update!(policy, w, Xcurrent, 1.0)
     @test policy.model.theta_t ≈ BayesUpdateNormal(theta0, Sigma0, interact(w, n, Xcurrent, labeling), 1.0, sample_std)[1]
     @test all(ContextualBandits.implementation(policy, Xcurrent, [], [], []) .∈ Ref(1:n))
 end

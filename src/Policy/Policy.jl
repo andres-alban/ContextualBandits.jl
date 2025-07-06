@@ -19,13 +19,13 @@ function initialize!(policy::Policy, W=Int[], X=Float64[], Y=Float64[])
 end
 
 """
-    state_update!(policy::Policy,W,X,Y[, rng])
+    state_update!(policy::Policy,W,X,Y)
 
 Update the state of a policy given the data `W`, `X`, and `Y`. `W` is the vector of treatments, `X` is the matrix of covariates, and `Y` is the vector of outcomes.
 
 For example, the policy may do Bayesian updating to get posterior parameters.
 """
-function state_update!(policy::Policy, W, X, Y, rng=Random.default_rng())
+function state_update!(policy::Policy, W, X, Y)
 end
 
 """
@@ -63,7 +63,7 @@ function allocationIndependent(policy::Policy, Xcurrent, W, X, Y, rng=Random.def
         Yav = view(Y, 1:(t-delay))
 
         # Update state of policy
-        state_update!(policy, Wav, Xav, Yav, rng)
+        state_update!(policy, Wav, Xav, Yav)
     end
     return allocation(policy, Xcurrent, W, X, Y, rng)
 end
@@ -71,7 +71,7 @@ end
 function implementationIndependent(policy::Policy, X_post, W, X, Y, rng=Random.default_rng(), Wpilot=Int[], Xpilot=Float64[], Ypilot=Float64[])
     initialize!(policy, Wpilot, Xpilot, Ypilot)
     for t in eachindex(Y)
-        state_update!(policy, view(W, 1:t), view(X, :, 1:t), view(Y, 1:t), rng)
+        state_update!(policy, view(W, 1:t), view(X, :, 1:t), view(Y, 1:t))
     end
     return implementation(policy, X_post, W, X, Y)
 end
