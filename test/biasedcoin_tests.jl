@@ -24,12 +24,12 @@ using Test
     W = rand(rng, 1:n, 200)
     Y = randn(rng, 200)
     for i in eachindex(Y)
-        ContextualBandits.state_update!(policy, W[1:i], view(X, :, 1:i), Y[1:i], rng)
+        ContextualBandits.state_update!(policy, W[1:i], view(X, :, 1:i), Y[1:i])
     end
     w = ContextualBandits.allocation(policy, Xcurrent, W, X, Y, rng)
     @test w in 1:n
     Ycurrent = randn(rng)
-    ContextualBandits.state_update!(policy, w, Xcurrent, Ycurrent, rng)
+    ContextualBandits.state_update!(policy, w, Xcurrent, Ycurrent)
     @test policy.model.theta_t ≈ BayesUpdateNormal(theta0, Sigma0, interact([W; w], n, hcat(X, Xcurrent), labeling), [Y; Ycurrent], sample_std)[1]
     @test all(ContextualBandits.implementation(policy, Xcurrent, W, X, Y) .∈ Ref(1:3))
 
@@ -61,12 +61,12 @@ end
     W = rand(rng, 1:n, 200)
     Y = randn(rng, 200)
     for i in eachindex(Y)
-        ContextualBandits.state_update!(policy, W[1:i], view(X, :, 1:i), Y[1:i], rng)
+        ContextualBandits.state_update!(policy, W[1:i], view(X, :, 1:i), Y[1:i])
     end
     w = ContextualBandits.allocation(policy, Xcurrent, W, X, Y, rng)
     @test w in 1:n
     Ycurrent = randn(rng)
-    ContextualBandits.state_update!(policy, w, Xcurrent, Ycurrent, rng)
+    ContextualBandits.state_update!(policy, w, Xcurrent, Ycurrent)
     @test policy.model.theta_t ≈ BayesUpdateNormal(theta0, Sigma0, interact([W; w], n, hcat(X, Xcurrent), labeling), [Y; Ycurrent], sample_std)[1]
     @test all(ContextualBandits.implementation(policy, Xcurrent, W, X, Y) .∈ Ref([0, 1]))
 

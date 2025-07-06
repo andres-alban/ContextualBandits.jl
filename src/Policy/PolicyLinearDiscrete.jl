@@ -12,7 +12,7 @@ function initialize!(policy::PolicyLinearDiscrete, W=Int[], X=Float64[], Y=Float
     initialize!(policy.model, W, X, Y)
 end
 
-function state_update!(policy::PolicyLinearDiscrete, W, X, Y, rng=Random.default_rng())
+function state_update!(policy::PolicyLinearDiscrete, W, X, Y)
     t = length(Y)
     if t > 0
         state_update!(policy.model, W[t], view(X, :, t), Y[t])

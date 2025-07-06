@@ -61,7 +61,7 @@ end
     Y = rand(rng, 1)
     Xt = rand(rng, FXtilde)
     @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
-    ContextualBandits.state_update!(policy, W, X, Y, rng)
+    ContextualBandits.state_update!(policy, W, X, Y)
     @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
     @test all(ContextualBandits.implementation(policy, Xt, W, X, Y) .∈ Ref(1:n))
 
@@ -75,7 +75,7 @@ end
     Y = rand(rng, 1)
     Xt = rand(rng, FXtilde)
     @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
-    ContextualBandits.state_update!(policy, W, X, Y, rng)
+    ContextualBandits.state_update!(policy, W, X, Y)
     @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
     @test all(ContextualBandits.implementation(policy, Xt, W, X, Y) .∈ Ref(1:n))
 end
@@ -99,7 +99,7 @@ end
     Y = rand(rng, 1)
     Xt = rand(rng, FXtilde)
     @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
-    ContextualBandits.state_update!(policy, W, X, Y, rng)
+    ContextualBandits.state_update!(policy, W, X, Y)
     @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
     @test all(ContextualBandits.implementation(policy, Xt, W, X, Y) .∈ Ref(1:n))
 
@@ -113,7 +113,7 @@ end
     Y = rand(rng, 1)
     Xt = rand(rng, FXtilde)
     @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
-    ContextualBandits.state_update!(policy, W, X, Y, rng)
+    ContextualBandits.state_update!(policy, W, X, Y)
     @test ContextualBandits.allocation(policy, Xt, W, X, Y, rng) in 1:n
     @test all(ContextualBandits.implementation(policy, Xt, W, X, Y) .∈ Ref(1:n))
 end

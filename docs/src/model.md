@@ -91,7 +91,7 @@ for t in 0:(T+delay)
     Yav = view(Y,1:(t-delay))
 
     # Update state of policy
-    state_update!(policy,Wav,Xav,Yav,rng)
+    state_update!(policy,Wav,Xav,Yav)
 end
 ```
 

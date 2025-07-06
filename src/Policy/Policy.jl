@@ -19,13 +19,13 @@ function initialize!(policy::Policy, W=Int[], X=Float64[], Y=Float64[])
 end
 
 """
-    state_update!(policy::Policy,W,X,Y[, rng])
+    state_update!(policy::Policy,W,X,Y)
 
 Update the state of a policy given the data `W`, `X`, and `Y`. `W` is the vector of treatments, `X` is the matrix of covariates, and `Y` is the vector of outcomes.
 
 For example, the policy may do Bayesian updating to get posterior parameters.
 """
-function state_update!(policy::Policy, W, X, Y, rng=Random.default_rng())
+function state_update!(policy::Policy, W, X, Y)
 end
 
 """
@@ -50,34 +50,7 @@ function implementation(policy::Policy, X_post, W, X, Y)
     return ones(Int, size(X_post, 2))
 end
 
-function allocationIndependent(policy::Policy, Xcurrent, W, X, Y, rng=Random.default_rng(), check=false, delay=0, Wpilot=[], Xpilot=[], Ypilot=[])
-    initialize!(policy, Wpilot, Xpilot, Ypilot)
-    T = length(Y)
-    for t in 1:(T+delay)
-        if check
-            w = allocation(policy, Xcurrent, view(W, 1:(t-1)), view(X, :, 1:(t-1)), view(Y, 1:(t-delay-1)), rng)
-            w == W[t] || @warn "The treatment in the data does not match the treatment allocated by the policy at time $t."
-        end
-        Wav = view(W, 1:min(t, T))
-        Xav = view(X, :, 1:min(t, T))
-        Yav = view(Y, 1:(t-delay))
-
-        # Update state of policy
-        state_update!(policy, Wav, Xav, Yav, rng)
-    end
-    return allocation(policy, Xcurrent, W, X, Y, rng)
-end
-
-function implementationIndependent(policy::Policy, X_post, W, X, Y, rng=Random.default_rng(), Wpilot=Int[], Xpilot=Float64[], Ypilot=Float64[])
-    initialize!(policy, Wpilot, Xpilot, Ypilot)
-    for t in eachindex(Y)
-        state_update!(policy, view(W, 1:t), view(X, :, 1:t), view(Y, 1:t), rng)
-    end
-    return implementation(policy, X_post, W, X, Y)
-end
-
-# Some triavial policies
-
+# Some trivial policies
 struct RandomPolicy <: Policy
     n::Int
 end
@@ -93,4 +66,36 @@ end
 
 function allocation(policy::RoundRobinPolicy, Xcurrent, W, X, Y, rng=Random.default_rng())
     return (length(W) % policy.n) + 1
+end
+
+
+# Functions for trials
+function allocation_current(policy::Policy, Xcurrent, W, X, Y, rng=Random.default_rng(), check=false, delay=0, Wpilot=[], Xpilot=[], Ypilot=[])
+    initialize!(policy, Wpilot, Xpilot, Ypilot)
+    T = length(Y)
+    for t in 1:(T+delay)
+        if check
+            rng_check = copy(rng)
+            w = allocation(policy, Xcurrent, view(W, 1:(t-1)), view(X, :, 1:(t-1)), view(Y, 1:(t-delay-1)), rng_check)
+            w == W[t] || @warn "The treatment in the data does not match the treatment allocated by the policy at time $t."
+        end
+        Wav = view(W, 1:min(t, T))
+        Xav = view(X, :, 1:min(t, T))
+        Yav = view(Y, 1:(t-delay))
+
+        # Update state of policy
+        state_update!(policy, Wav, Xav, Yav)
+
+        # jump rng to another state for reproducibility
+        jump!(rng)
+    end
+    return allocation(policy, Xcurrent, W, X, Y, rng)
+end
+
+function implementation_current(policy::Policy, X_post, W, X, Y, Wpilot=Int[], Xpilot=Float64[], Ypilot=Float64[])
+    initialize!(policy, Wpilot, Xpilot, Ypilot)
+    for t in eachindex(Y)
+        state_update!(policy, view(W, 1:t), view(X, :, 1:t), view(Y, 1:t))
+    end
+    return implementation(policy, X_post, W, X, Y)
 end

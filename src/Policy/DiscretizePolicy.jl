@@ -29,7 +29,7 @@ function initialize!(policy::DiscretizePolicy, W, X, Y)
     return
 end
 
-function state_update!(policy::DiscretizePolicy, W, X, Y, rng=Random.default_rng())
+function state_update!(policy::DiscretizePolicy, W, X, Y)
     for i in (size(policy.X_discrete, 2)+1):size(X, 2)
         policy.X_discrete = hcat(policy.X_discrete, X_discretize(view(X, :, i), policy))
     end

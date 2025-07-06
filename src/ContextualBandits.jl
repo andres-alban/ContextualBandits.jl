@@ -12,7 +12,7 @@ using .CovariatesGeneration
 export CovariatesCopula, CovariatesIndependent, CovariatesInteracted, OrdinalDiscrete, marginals, covariates_partition
 
 include("utils.jl")
-export interact, interact!, argmax_ties, argmin_ties, randnMv, labeling2predprog
+export interact, interact!, argmax_ties, argmin_ties, randnMv, labeling2predprog, jump!
 
 include("utils_discrete.jl")
 
@@ -25,7 +25,7 @@ include("OutcomeModel/OutcomeLinear.jl")
 export OutcomeLinearBayes, OutcomeLinear
 
 include("Policy/Policy.jl")
-export Policy, RandomPolicy
+export Policy, RandomPolicy, RoundRobinPolicy, allocation_current, implementation_current
 include("Policy/PolicyLinear.jl")
 export PolicyLinear, RandomPolicyLinear, GreedyPolicyLinear
 include("Policy/robust_prior_linear.jl")
