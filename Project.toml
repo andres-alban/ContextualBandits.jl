@@ -1,7 +1,7 @@
 name = "ContextualBandits"
 uuid = "b30de75d-69a8-450b-96d3-f36be60bd625"
 authors = ["Andres Alban", "Stephen E. Chick", "Spyros I. Zoumpoulis"]
-version = "0.1.0"
+version = "0.1.1"
 
 [compat]
 julia = "1.7"

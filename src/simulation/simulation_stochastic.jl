@@ -8,7 +8,7 @@ but rather through [simulation_stochastic](@ref) and [simulation_stochastic_para
 """
 function simulation_stochastic_internal(FX, FXtilde, n, T, delay, policies, outcome_model,
     reps, post_reps, recorder, aggregators, pilot_samples_per_treatment,
-    Xinterest, rng, verbose)
+    Xinterest, rng, verbose, channel)
 
     @assert length(FX) == length(FXtilde)
 
@@ -47,7 +47,7 @@ function simulation_stochastic_internal(FX, FXtilde, n, T, delay, policies, outc
             update!(aggregators[ip], out)
         end
         if verbose && (i % 100 == 0)
-            println(i)
+            put!(channel, (myid(), i))
         end
     end
 
@@ -110,7 +110,8 @@ A dictionary with the input arguments and the output of the simulation for each 
 function simulation_stochastic(reps, FX, n, T, policies, outcome_model;
     FXtilde=FX, delay=0,
     post_reps=0, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment=0,
-    Xinterest=zeros(length(FX), 0), rng=Random.default_rng(), verbose=false)
+    Xinterest=zeros(length(FX), 0), rng=Random.default_rng(), verbose=false,
+    callback=(id, i) -> println("worker $id finished rep $i"))
 
     policy_labels = try
         [string(j) for j in keys(policies)]
@@ -119,9 +120,17 @@ function simulation_stochastic(reps, FX, n, T, policies, outcome_model;
     end
     policy_values = collect(values(policies))
 
+    channel = Channel{Tuple{Int,Int}}(0)
+    @async begin
+        while true
+            (id, i) = take!(channel)
+            callback(id, i)
+        end
+    end
+
     aggregators = simulation_stochastic_internal(FX, FXtilde, n, T, delay, policy_values, outcome_model,
         reps, post_reps, recorder, aggregators, pilot_samples_per_treatment,
-        Xinterest, rng, verbose)
+        Xinterest, rng, verbose, channel)
 
     output = Dict(policy_labels[i] => asdict(aggregators[i]) for i in eachindex(policy_labels))
 
@@ -154,7 +163,8 @@ results = simulation_stochastic_parallel(FX, n, T, policies, outcome_model)
 function simulation_stochastic_parallel(reps, FX, n, T, policies, outcome_model;
     FXtilde=FX, delay=0,
     post_reps=0, recorder=StandardRecorder(), aggregators=nothing, pilot_samples_per_treatment=0,
-    Xinterest=zeros(length(FX), 0), rng=Random.default_rng(), verbose=false)
+    Xinterest=zeros(length(FX), 0), rng=Random.default_rng(), verbose=false,
+    callback=(id, i) -> println("worker $id finished rep $i"))
 
     policy_labels = try
         [string(j) for j in keys(policies)]
@@ -168,12 +178,20 @@ function simulation_stochastic_parallel(reps, FX, n, T, policies, outcome_model;
     futures = Vector{Future}(undef, nwrkrs)
     reps_per_worker = div(reps, nwrkrs)
     rem_reps = reps % nwrkrs # remaining reps will be distributed among the first workers that receive the task
+    channel = RemoteChannel(() -> Channel{Tuple{Int,Int}}(nwrkrs*10))
+    @async begin
+        while true
+            (id, i) = take!(channel)
+            callback(id, i)
+        end
+    end
+
     for (i, w) in enumerate(wrkrs)
         rng_worker = Xoshiro(abs(rand(rng, Int)))
         repsworker = reps_per_worker + (rem_reps > 0)
         futures[i] = @spawnat w simulation_stochastic_internal(FX, FXtilde, n, T, delay, policy_values, outcome_model,
             repsworker, post_reps, recorder, aggregators, pilot_samples_per_treatment,
-            Xinterest, rng_worker, verbose)
+            Xinterest, rng_worker, verbose, channel)
         rem_reps -= 1
     end
 

@@ -137,7 +137,7 @@ end
     aggregators = aggregators = [ContextualBandits.StandardResultsAggregator(ContextualBandits.output_recorder(recorder), ContextualBandits.output_recorder_names(recorder)) for _ in policies]
     rng = Xoshiro(1234)
     x = ContextualBandits.simulation_stochastic_internal(FX, FXtilde, n, T, delay, policies, outcome_model,
-        reps, post_reps, recorder, aggregators, pilot_samples_per_treatment, Xinterest, rng, false)
+        reps, post_reps, recorder, aggregators, pilot_samples_per_treatment, Xinterest, rng, false, Channel(0))
     y = ContextualBandits.asdict(x[2])
     @test all(y["regret_on"]["mean"] .>= 0.0)
     @test all(cumsum(y["regret_on"]["mean"]) .≈ y["cumulregret_on"]["mean"])
@@ -178,7 +178,7 @@ end
     policy2 = GreedyPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling)
     policies = Dict("random" => policy, "greedy" => policy2)
     outcome_model = OutcomeLinearBayes(n, m, theta0, Sigma0, sample_std, labeling)
-    reps = 10
+    reps = 100
     post_reps = 10
     pilot_samples_per_treatment = 0
     Xinterest = rand(FXtilde, 2)
@@ -229,7 +229,7 @@ end
     policy2 = GreedyPolicyLinear(n, m, theta0, Sigma0, sample_std, labeling)
     policies = Dict("random" => policy, "greedy" => policy2)
     outcome_model = OutcomeLinearBayes(n, m, theta0, Sigma0, sample_std, labeling)
-    reps = 100
+    reps = 200
     post_reps = 10
     pilot_samples_per_treatment = 0
     Xinterest = rand(FXtilde, 2)
