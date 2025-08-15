@@ -1,21 +1,21 @@
-# The functions in this file assume that FX is a `CovariatesIndependent` or `CovariatesCopula` object with the default intercept=true and reduce_category=true.
+# The functions in this file assume that FX is a `CovariatesIndependentFinite` or
+# `CovariatesCopulaFinite` object with the default intercept=true and reduce_category=true.
 
 """
-    X2g(X,FX)
+    X2g(X, FX::CovariatesGeneratorFinite)
 
 Converts a design vector `X` with only discrete covariates into a group `g`,
 where `g` is a unique integer assigned to each combination of the covariate values.
 The reverse conversion can be achieved with [`g2X`](@ref).
 """
-function X2g(X, FX)
+function X2g(X, FX::CovariatesGeneratorFinite)
     # Assumes FX has an intercept and reduce_category
     g = 1
     sumcat = 0
     prodcat = 1
-    for i in length(marginals(FX)):-1:1
-        m = marginals(FX)[i]
-        catn = length(support(m))
-        if typeof(m) <: Categorical
+    for i in length(FX.support):-1:1
+        catn = length(FX.support[i])
+        if FX.cat[i]
             Xtemp = X[(end-sumcat-catn+2):(end-sumcat)]
             gtemp = findall(x -> x == 1, Xtemp)
             if (length(gtemp) > 1)
@@ -25,13 +25,11 @@ function X2g(X, FX)
             g += ggtemp * prodcat
             sumcat += catn - 1
             prodcat *= catn
-        elseif typeof(m) <: OrdinalDiscrete
-            gtemp = findall(x -> x == X[end-sumcat], support(m))
+        else
+            gtemp = findall(x -> x == X[end-sumcat], FX.support[i])
             g += (gtemp[1] - 1) * prodcat
             sumcat += 1
             prodcat *= catn
-        else
-            throw(DomainError("The marginal $m at position $i is not a `Categorical` or `OrdinalDiscrete` distribution."))
         end
     end
     return g
@@ -39,42 +37,39 @@ end
 
 
 """
-    g2X(g,FX)
+    g2X(g, FX::CovariatesGeneratorFinite)
 
 Converts a group `g` into a design vector `X`, where `g` is a unique integer
 assigned to each combination of the covariate values. The reverse conversion can
 be achieved with [`X2g`](@ref).
 """
-function g2X(g, FX)
+function g2X(g, FX::CovariatesGeneratorFinite)
     # Assumes FX has an intercept and reduce_category
-    catn = [length(support(m)) for m in marginals(FX)]
+    catn = [length(i) for i in FX.support]
     splits = prod(catn)
     g > 0 || g <= splits || throw(BoundsError("The group `g=$g` is out of bounds [1,$splits]"))
-    X = zeros(1 + sum([typeof(m) <: Categorical ? length(support(m)) - 1 : 1 for m in marginals(FX)]))
+    X = zeros(1 + sum([FX.cat[i] ? length(FX.support[i]) - 1 : 1 for i in eachindex(FX.support)]))
     X[1] = 1
     index = 1
-    for i in eachindex(marginals(FX))
-        m = marginals(FX)[i]
+    for i in eachindex(FX.support)
         splits = splits // catn[i]
         gcurrent = (g - 1) ÷ splits
         g = (g - 1) % splits + 1
-        if typeof(m) <: Categorical
+        if FX.cat[i]
             if (gcurrent > 0)
                 X[index+gcurrent] = 1
             end
             index = index + catn[i] - 1
-        elseif typeof(m) <: OrdinalDiscrete
-            X[index+1] = support(m)[gcurrent+1]
-            index += 1
         else
-            throw(DomainError("The marginal $m at position $i is not a `Categorical` or `OrdinalDiscrete` distribution."))
+            X[index+1] = FX.support[i][gcurrent+1]
+            index += 1
         end
     end
     return X
 end
 
 function total_groups(FX)
-    return prod([length(support(m)) for m in marginals(FX)])
+    return prod([length(s) for s in FX.support])
 end
 
 function index2treatment(i, gn)
@@ -90,11 +85,11 @@ function treatment_g2index(w, g, gn)
 end
 
 """
-    X2g_prior(theta0,Sigma0,FX,labeling,n)
+    X2g_prior(theta0, Sigma0, FX::CovariatesGeneratorFinite, labeling, n)
 
 Transform the prior for covariate values to the prior for groups.
 """
-function X2g_prior(theta0, Sigma0, FX, labeling, n)
+function X2g_prior(theta0, Sigma0, FX::CovariatesGeneratorFinite, labeling, n)
     gn = total_groups(FX)
     Xs = Matrix{Float64}(undef, length(FX), gn)
     for g in 1:gn
@@ -123,33 +118,31 @@ function X2g_prior(theta0, Sigma0, FX, labeling, n)
     return theta0_disc, Sigma0_disc
 end
 
-
 """
-    X2g_probs(FX::Union{CovariatesIndependent,CovariatesCopula})
+    X2g_probs(FX::CovariatesGeneratorFinite)
 
 Obtain the probability of observing a group.
 """
-function X2g_probs(FX::CovariatesIndependent)
-    catn = [length(support(m)) for m in marginals(FX)]
+function X2g_probs(FX::CovariatesIndependentFinite)
+    catn = [length(s) for s in FX.support]
     p_disc = ones(prod(catn))
     for j in eachindex(p_disc)
         g = j
         splits = prod(catn)
         for i in eachindex(catn)
-            m = marginals(FX)[i]
-            splits = splits // catn[i]
+            splits = splits ÷ catn[i]
             gcurrent = (g - 1) ÷ splits
             g = (g - 1) % splits + 1
-            p_disc[j] *= probs(m)[gcurrent+1]
+            p_disc[j] *= FX.probs[i][gcurrent+1]
         end
     end
     return p_disc
 end
 
-function X2g_probs(FX::CovariatesCopula)
+function X2g_probs(FX::CovariatesCopulaFinite)
     # This is a Monte Carlo approximation
     # An exact answer may be possible using the functionality of Copulas.jl
-    catn = [length(support(m)) for m in marginals(FX)]
+    catn = [length(s) for s in FX.support]
     p_disc = zeros(prod(catn))
     reps = length(p_disc) * 1000
     rng = Xoshiro(8765)

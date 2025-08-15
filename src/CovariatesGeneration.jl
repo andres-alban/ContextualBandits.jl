@@ -4,13 +4,32 @@ using Copulas
 using Random
 import Base
 
-export CovariatesCopula, CovariatesIndependent, CovariatesInteracted, OrdinalDiscrete, marginals, covariates_partition
+export CovariatesGenerator, CovariatesGeneratorFinite
+export CovariatesCopulaAny, CovariatesCopulaFinite, CovariatesCopula
+export CovariatesIndependentAny, CovariatesIndependentFinite, CovariatesIndependent
+export CovariatesInteracted, marginals, covariates_partition
+export OrdinalDiscrete
 
 """
-    CovariatesCopula{C} <: Sampleable{Multivariate,Continuous}
-    CovariatesCopula(marginals,copula,intercept=true,reduce_category=true)
+    CovariatesGenerator <: Sampleable{Multivariate,Continuous}
 
-Sampleable to randomly generate a vector of covariates using marginal distributions and copulas from the Copulas.jl package.
+Supertype for CovariatesCopula and CovariatesIndependent.
+"""
+abstract type CovariatesGenerator <: Sampleable{Multivariate,Continuous} end
+
+"""
+    CovariatesCopula{C} <: CovariatesGenerator
+    CovariatesCopula(marginals, copula, intercept=true, reduce_category=true)
+
+Supertype for [CovariatesCopulaAny](@ref) and [CovariatesCopulaFinite](@ref). The constructor
+generates one of these types based on the types of `marginals`. 
+> Warning
+> `CovariatesCopulaFinite` is generated if all marginals are discrete and univariate
+> and will error if any marginal has an infinite support. In that case, use the
+> `CovariatesCopulaAny` constructor instead, which takes the same arguments.
+
+The two types are sampleables to randomly generate a vector of covariates using
+marginal distributions and copulas from the Copulas.jl package.
 
 `Categorical` marginal distributions are assumed unordered (nominal) and automatically generated as a set of dummy variables.
 To use ordered categorical variables, use the [OrdinalDiscrete](@ref) type.
@@ -29,52 +48,151 @@ FX = CovariatesCopula([Categorical([1/3,1/3,1/3]),Normal(0,1)],copula)
 rand(FX)
 ```
 """
-struct CovariatesCopula{C} <: Sampleable{Multivariate,Continuous}
+abstract type CovariatesCopula <: CovariatesGenerator end
+
+"""
+    CovariatesCopulaAny{C} <: CovariatesCopula
+
+Sampleables to randomly generate a vector of covariates using
+marginal distributions and copulas from the Copulas.jl package.
+
+This type should be generated using the [CovariatesCopula](@ref) constructor.
+
+`C` is a copula type from the `Copulas` package.
+"""
+struct CovariatesCopulaAny{C} <: CovariatesCopula
     marginals::Vector{Distribution{Univariate,S} where S<:ValueSupport}
     copula::C
     len::Int
     cat::BitVector
+    partition::Vector{UnitRange{Int}}
     intercept::Bool
     reduce_category::Bool
-    function CovariatesCopula(marginals, copula, intercept=true, reduce_category=true)
+    function CovariatesCopulaAny{C}(marginals, copula::C, intercept=true, reduce_category=true) where C
         length(copula) == length(marginals) || throw(DomainError(copula, "The copula has to have the same length as the marginals"))
         if intercept && reduce_category
             reduce_category = true
         else
             reduce_category = false
         end
-        len = 0
         cat = BitVector(zeros(Bool, length(marginals)))
+        partition = Vector{UnitRange{Int}}(undef, length(marginals))
+        index = 1
+        if intercept
+            index += 1
+        end
         for i in 1:length(marginals)
             if typeof(marginals[i]) <: Categorical
                 cat[i] = true
-                len += length(support(marginals[i]))
-                if reduce_category
-                    len -= 1
-                end
+                newindex = index + length(support(marginals[i])) - reduce_category
+                partition[i] = index:newindex-1
+                index = newindex
             else
-                len += 1
+                partition[i] = index:index
+                index += 1
             end
         end
-        if intercept
-            len += 1
-        end
-        new{typeof(copula)}(marginals, copula, len, cat, intercept, reduce_category)
+        new{C}(marginals, copula, index - 1, cat, partition, intercept, reduce_category)
     end
 end
+CovariatesCopulaAny(marginals, copula::C, intercept=true, reduce_category=true) where C =
+    CovariatesCopulaAny{C}(marginals, copula::C, intercept, reduce_category)
 
-function CovariatesCopula(marginals::Array{<:Distribution{Univariate,S} where {S<:ValueSupport},1}, corr::Float64, intercept=true, reduce_category=true)
+function CovariatesCopulaAny(marginals, corr::Float64, intercept=true, reduce_category=true)
     corr_mat = fill(corr, (length(marginals), length(marginals)))
     for i in 1:length(marginals)
         corr_mat[i, i] = 1.0
     end
     copula = GaussianCopula(corr_mat)
-    CovariatesCopula(marginals, copula, intercept, reduce_category)
+    CovariatesCopulaAny(marginals, copula, intercept, reduce_category)
 end
 
-function CovariatesCopula(marginals::Array{<:Distribution{Univariate,S} where {S<:ValueSupport},1}, corr_mat::Array{Float64,2}, intercept=true, reduce_category=true)
+function CovariatesCopulaAny(marginals, corr_mat::AbstractMatrix{Float64}, intercept=true, reduce_category=true)
     copula = GaussianCopula(corr_mat)
-    CovariatesCopula(marginals, copula, intercept, reduce_category)
+    CovariatesCopulaAny(marginals, copula, intercept, reduce_category)
+end
+
+"""
+    CovariatesCopulaFinite{C} <: CovariatesCopula
+
+Sampleables to randomly generate a vector of covariates using
+marginal distributions and copulas from the Copulas.jl package.
+
+This type should be generated using the [CovariatesCopula](@ref) constructor.
+This type is only generated if all marginals have a finite support.
+
+`C` is a copula type from the `Copulas` package.
+"""
+struct CovariatesCopulaFinite{C} <: CovariatesCopula
+    marginals::Vector{DiscreteUnivariateDistribution}
+    copula::C
+    len::Int
+    cat::BitVector
+    partition::Vector{UnitRange{Int}}
+    support::Vector{Vector{Float64}}
+    probs::Vector{Vector{Float64}}
+    intercept::Bool
+    reduce_category::Bool
+    function CovariatesCopulaFinite{C}(marginals, copula::C, intercept=true, reduce_category=true) where C
+        length(copula) == length(marginals) || throw(DomainError(copula, "The copula has to have the same length as the marginals"))
+        if intercept && reduce_category
+            reduce_category = true
+        else
+            reduce_category = false
+        end
+        cat = BitVector(zeros(Bool, length(marginals)))
+        partition = Vector{UnitRange{Int}}(undef, length(marginals))
+        index = 1
+        if intercept
+            index += 1
+        end
+        supp = Vector{Vector{Float64}}(undef, length(marginals))
+        p = similar(supp)
+        for i in 1:length(marginals)
+            try
+                supp[i] = collect(support(marginals[i]))
+            catch
+                throw(DomainError(marginals[i],
+                    "CovariatesCopulaFinite can only be created with marginals that have finite support. Use CovariatesCopulaAny instead."))
+            end
+            p[i] = probs(marginals[i])
+            if typeof(marginals[i]) <: Categorical
+                cat[i] = true
+                newindex = index + length(support(marginals[i])) - reduce_category
+                partition[i] = index:newindex-1
+                index = newindex
+            else
+                partition[i] = index:index
+                index += 1
+            end
+        end
+        new{C}(marginals, copula, index - 1, cat, partition, supp, p, intercept, reduce_category)
+    end
+end
+CovariatesCopulaFinite(marginals, copula::C, intercept=true, reduce_category=true) where C =
+    CovariatesCopulaFinite{C}(marginals, copula::C, intercept, reduce_category)
+
+function CovariatesCopulaFinite(marginals::AbstractVector{<:Distribution{Univariate,S} where {S<:ValueSupport}}, corr::Float64, intercept=true, reduce_category=true)
+    corr_mat = fill(corr, (length(marginals), length(marginals)))
+    for i in 1:length(marginals)
+        corr_mat[i, i] = 1.0
+    end
+    copula = GaussianCopula(corr_mat)
+    CovariatesCopulaFinite(marginals, copula, intercept, reduce_category)
+end
+
+function CovariatesCopulaFinite(marginals::AbstractVector{<:Distribution{Univariate,S} where {S<:ValueSupport}}, corr_mat::AbstractMatrix{Float64}, intercept=true, reduce_category=true)
+    copula = GaussianCopula(corr_mat)
+    CovariatesCopulaFinite(marginals, copula, intercept, reduce_category)
+end
+
+# copula here can also be a correlation value/matrix
+function CovariatesCopula(marginals::AbstractVector{<:DiscreteUnivariateDistribution}, copula, intercept=true, reduce_category=true)
+    CovariatesCopulaFinite(marginals, copula, intercept, reduce_category)
+end
+
+function CovariatesCopula(marginals, copula, intercept=true, reduce_category=true)
+    CovariatesCopulaAny(marginals, copula, intercept, reduce_category)
 end
 
 function Base.length(d::CovariatesCopula)::Int
@@ -114,13 +232,24 @@ function Distributions._rand!(rng::AbstractRNG, d::CovariatesCopula, x::Abstract
 end
 
 """
-    CovariatesIndependent <: Sampleable{Multivariate,Continuous}
+    CovariatesIndependent <: CovariatesGenerator
     CovariatesIndependent(marginals, intercept=true, reduce_category=true)
 
-Sampleable to randomly generate a vector of covariates using marginal distributions assuming the values are independent of each other.
+Supertype for [CovariatesIndependentAny](@ref) and [CovariatesIndependentFinite](@ref). The constructor
+generates one of these types based on the types of `marginals`.
+> Warning
+> `CovariatesIndependentFinite` is generated if all marginals are discrete and univariate
+> and will error if any marginal has an infinite support. In that case, use the
+> `CovariatesCopulaAny` constructor instead, which takes the same arguments.
+
+The two types are sampleables to randomly generate a vector of covariates using
+independent marginal distributions.
+
+`Categorical` marginal distributions are assumed unordered (nominal) and automatically generated as a set of dummy variables.
+To use ordered categorical variables, use the [OrdinalDiscrete](@ref) type.
 
 # Arguments
-- `marginals::Array{Distribution{Univariate,S} where S<:ValueSupport,1}`: vector of univariate distributions from the Distributions package
+- `marginals::Vector{Distribution{Univariate,S} where S<:ValueSupport}`: vector of univariate distributions from the Distributions package
 - `intercept=true`: include an intercept term in the vector of covariates
 - `reduce_category=true`: omit the first dummy variable for `Categorical` covariates
 
@@ -131,37 +260,110 @@ FX = CovariatesIndependent([Categorical([1/3,1/3,1/3]),Normal(0,1)])
 rand(FX)
 ```
 """
-struct CovariatesIndependent <: Sampleable{Multivariate,Continuous}
+abstract type CovariatesIndependent <: CovariatesGenerator end
+
+"""
+    CovariatesIndependentAny <: CovariatesIndependent
+
+Sampleables to randomly generate a vector of covariates using
+independent marginal distributions.
+
+This type should be generated using the [CovariatesIndependent](@ref) constructor.
+"""
+struct CovariatesIndependentAny <: CovariatesIndependent
     marginals::Vector{Distribution{Univariate,S} where S<:ValueSupport}
     len::Int
     cat::BitVector
+    partition::Vector{UnitRange{Int}}
     intercept::Bool
     reduce_category::Bool
-    function CovariatesIndependent(marginals, intercept=true, reduce_category=true)
+    function CovariatesIndependentAny(marginals, intercept=true, reduce_category=true)
         if intercept && reduce_category
             reduce_category = true
         else
             reduce_category = false
         end
-        len = 0
         cat = BitVector(zeros(Bool, length(marginals)))
+        partition = Vector{UnitRange{Int}}(undef, length(marginals))
+        index = 1
+        if intercept
+            index += 1
+        end
         for i in 1:length(marginals)
             if typeof(marginals[i]) <: Categorical
                 cat[i] = true
-                len += length(support(marginals[i]))
-                if reduce_category
-                    len -= 1
-                end
+                newindex = index + length(support(marginals[i])) - reduce_category
+                partition[i] = index:newindex-1
+                index = newindex
             else
-                len += 1
+                partition[i] = index:index
+                index += 1
             end
         end
-        if intercept
-            len += 1
-        end
-
-        new(marginals, len, cat, intercept, reduce_category)
+        new(marginals, index - 1, cat, partition, intercept, reduce_category)
     end
+end
+
+"""
+    CovariatesIndependentFinite <: CovariatesIndependent
+
+Sampleables to randomly generate a vector of covariates using
+independent marginal distributions.
+
+This type should be generated using the [CovariatesIndependent](@ref) constructor.
+This type is only generated if all marginals have a finite support.
+"""
+struct CovariatesIndependentFinite <: CovariatesIndependent
+    marginals::Vector{DiscreteUnivariateDistribution}
+    len::Int
+    cat::BitVector
+    partition::Vector{UnitRange{Int}}
+    support::Vector{Vector{Float64}}
+    probs::Vector{Vector{Float64}}
+    intercept::Bool
+    reduce_category::Bool
+    function CovariatesIndependentFinite(marginals, intercept=true, reduce_category=true)
+        if intercept && reduce_category
+            reduce_category = true
+        else
+            reduce_category = false
+        end
+        cat = BitVector(zeros(Bool, length(marginals)))
+        partition = Vector{UnitRange{Int}}(undef, length(marginals))
+        index = 1
+        if intercept
+            index += 1
+        end
+        supp = Vector{Vector{Float64}}(undef, length(marginals))
+        p = similar(supp)
+        for i in 1:length(marginals)
+            try
+                supp[i] = collect(support(marginals[i]))
+            catch
+                throw(DomainError(marginals[i],
+                    "CovariatesIndependentFinite can only be created with marginals that have finite support. Use CovariatesIndependentAny instead."))
+            end
+            p[i] = probs(marginals[i])
+            if typeof(marginals[i]) <: Categorical
+                cat[i] = true
+                newindex = index + length(support(marginals[i])) - reduce_category
+                partition[i] = index:newindex-1
+                index = newindex
+            else
+                partition[i] = index:index
+                index += 1
+            end
+        end
+        new(marginals, index - 1, cat, partition, supp, p, intercept, reduce_category)
+    end
+end
+
+function CovariatesIndependent(marginals::AbstractVector{S}, intercept=true, reduce_category=true) where S<:DiscreteUnivariateDistribution
+    CovariatesIndependentFinite(marginals, intercept, reduce_category)
+end
+
+function CovariatesIndependent(marginals, intercept=true, reduce_category=true)
+    CovariatesIndependentAny(marginals, intercept, reduce_category)
 end
 
 function Base.length(d::CovariatesIndependent)::Int
@@ -199,32 +401,16 @@ function Distributions._rand!(rng::AbstractRNG, d::CovariatesIndependent, x::Abs
     return x
 end
 
+const CovariatesGeneratorFinite = Union{CovariatesCopulaFinite,CovariatesIndependentFinite}
+
 """
-    covariates_partition(FX::Union{CovariatesCopula, CovariatesIndependent})
+    covariates_partition(FX::Union{CovariatesIndependent,CovariatesCopula})
 
 Partition the covariates into indices representing each covariate.
 Categorical covariates are represented by several indices, while others by a single index.
 """
-function covariates_partition(FX::Union{CovariatesCopula,CovariatesIndependent})
-    partition = Vector{Vector{Int}}(undef, 0)
-    index = 1
-    if FX.intercept
-        index += 1
-    end
-    for i in 1:length(FX.marginals)
-        if FX.cat[i]
-            len = length(support(FX.marginals[i])) - FX.reduce_category
-            partition_candidate = collect(index:(index+len-1))
-            if !isempty(partition_candidate)
-                push!(partition, partition_candidate)
-            end
-            index += len
-        else
-            push!(partition, [index])
-            index += 1
-        end
-    end
-    return partition
+function covariates_partition(FX::Union{CovariatesIndependent,CovariatesCopula})
+    return FX.partition
 end
 
 """
@@ -268,7 +454,7 @@ end
 
 Type to sample from a discrete distribution. Unlike `DiscreteNonParametric` or `Categorical`,
 this type is interpreted as ordinal by `CovariatesCopula` and `CovariatesIndependent`.
-> WARNING: although this type is a Distribution, I have only defined the rand and 
+> Warning: although this type is a Distribution, I have only defined the rand and 
 > quantile functions, which are required for covariate generation.
 
 The implementation wraps a `DiscreteNonParametric` variable in a new structure.

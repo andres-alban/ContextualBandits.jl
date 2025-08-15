@@ -187,12 +187,12 @@ function randnMv(rng, mu, Sigma)
 end
 
 """
-    labeling2predprog(n, FX::Union{CovariatesCopula, CovariatesIndependent}, labeling)
+    labeling2predprog(n, FX::CovariatesGenerator, labeling)
 
 Return the predictive and prognostic covariates from a `labeling` given the covariates generation given by FX.
 """
-function labeling2predprog(n, FX::Union{CovariatesCopula,CovariatesIndependent}, labeling)
-    partition = covariates_partition(FX)
+function labeling2predprog(n, FX::CovariatesGenerator, labeling)
+    partition = collect.(covariates_partition(FX))
     labeling2predprog(n, length(FX), labeling, partition)
 end
 

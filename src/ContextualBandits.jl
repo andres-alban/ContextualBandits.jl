@@ -9,7 +9,11 @@ using QuadGK
 
 include("CovariatesGeneration.jl")
 using .CovariatesGeneration
-export CovariatesCopula, CovariatesIndependent, CovariatesInteracted, OrdinalDiscrete, marginals, covariates_partition
+export CovariatesGenerator, CovariatesGeneratorFinite
+export CovariatesCopulaAny, CovariatesCopulaFinite, CovariatesCopula
+export CovariatesIndependentAny, CovariatesIndependentFinite, CovariatesIndependent
+export CovariatesInteracted, marginals, covariates_partition
+export OrdinalDiscrete
 
 include("utils.jl")
 export interact, interact!, argmax_ties, argmin_ties, randnMv, labeling2predprog, jump!

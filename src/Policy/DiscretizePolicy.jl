@@ -1,18 +1,18 @@
 """
     DiscretizePolicy{T<:Policy} <: Policy
-    DiscretizePolicy(subpolicy::T, FX::Union{CovariatesIndependent,CovariatesCopula}, breakpoints) where {T<:Policy}
+    DiscretizePolicy(subpolicy::T, FX::CovariatesGenerator, breakpoints) where {T<:Policy}
 
 Modify `subpolicy` by discretizing the covariates in `FX` before passing them to `subpolicy`.`
 """
 mutable struct DiscretizePolicy{T<:Policy} <: Policy
     subpolicy::T
-    FX::Union{CovariatesIndependent,CovariatesCopula}
-    FX_discretized::Union{CovariatesIndependent,CovariatesCopula}
+    FX::CovariatesGenerator
+    FX_discretized::CovariatesGeneratorFinite
     gn::Int
     breakpoints::Vector{Vector{Float64}}
     values_discretized::Vector{Vector{Float64}}
     X_discrete::Matrix{Float64}
-    function DiscretizePolicy(subpolicy::T, FX::Union{CovariatesIndependent,CovariatesCopula}, breakpoints) where {T<:Policy}
+    function DiscretizePolicy(subpolicy::T, FX::CovariatesGenerator, breakpoints) where {T<:Policy}
         out = discretizeFX(FX, breakpoints)
         new{T}(deepcopy(subpolicy), FX, out[1], out[3], deepcopy(breakpoints), out[2], Matrix{Float64}(undef, length(FX), 0))
     end
@@ -51,11 +51,11 @@ function allocation(policy::DiscretizePolicy, Xcurrent, W, X, Y, rng=Random.defa
 end
 
 
-function discretizeFX(FX::Union{CovariatesIndependent,CovariatesCopula}, breakpoints)
+function discretizeFX(FX::CovariatesGenerator, breakpoints)
     @assert length(breakpoints) == length(marginals(FX)) "breakpoints is not the same length as marginals(FX)"
     @assert all([all(x .> 0) for x in diff.(breakpoints)]) "breakpoints are not strictly increasing"
     gn = 1
-    discretized_marginals = Vector{Distribution{Univariate,S} where S<:ValueSupport}(undef, length(marginals(FX)))
+    discretized_marginals = Vector{DiscreteUnivariateDistribution}(undef, length(marginals(FX)))
     values_discretized = Vector{Vector{Float64}}(undef, 0)
     for i in eachindex(marginals(FX))
         m = marginals(FX)[i]

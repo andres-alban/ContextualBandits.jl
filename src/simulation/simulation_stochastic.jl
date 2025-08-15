@@ -13,11 +13,7 @@ function simulation_stochastic_internal(FX, FXtilde, n, T, delay, policies, outc
     @assert length(FX) == length(FXtilde)
 
     X = Matrix{Float64}(undef, length(FX), T)
-    finite, weights, X_post = try
-        finite_groups(FXtilde, post_reps)
-    catch
-        false, ones(post_reps) ./ post_reps, Matrix{Float64}(undef, length(FXtilde), post_reps)
-    end
+    finite, weights, X_post = finite_groups(FXtilde, post_reps)
 
     initialize!(recorder, T, n, length(FX), delay, size(X_post, 2), weights, size(Xinterest, 2))
     if isnothing(aggregators)
@@ -55,19 +51,14 @@ function simulation_stochastic_internal(FX, FXtilde, n, T, delay, policies, outc
 end
 
 """
-    finite_groups(FXtilde,post_reps)
+    finite_groups(FXtilde, post_reps)
 
-For a Covariates generator `FXtilde` (most likely an instance of [CovariatesIndependent](@ref) or [CovariatesCopula](@ref)),
+For a CovariatesGenerator `FXtilde` (most likely an object created with [CovariatesIndependent](@ref) or [CovariatesCopula](@ref)),
 check if all covariates are finite and returns a flag indicating if the covariates are finite, the probability weights of each covariates value,
 and a matrix of the covariates. If the covariates are not finite or the number of possible covariates is larger than `post_reps`, 
 the weights are all equal to `1/post_reps`, and the matrix is of the right dimensions but uninitialized. 
 """
-function finite_groups(FXtilde, post_reps)
-    for i in 1:length(marginals(FXtilde))
-        if !(typeof(marginals(FXtilde)[i]) <: Categorical) && !(typeof(marginals(FXtilde)[i]) <: OrdinalDiscrete)
-            return false, ones(post_reps) ./ post_reps, Matrix{Float64}(undef, length(FXtilde), post_reps)
-        end
-    end
+function finite_groups(FXtilde::CovariatesGeneratorFinite, post_reps)
     weights = X2g_probs(FXtilde)
     if length(weights) > post_reps # If ptilde is too large (there are too many groups), we fall back to random draws
         return false, ones(post_reps) ./ post_reps, Matrix{Float64}(undef, length(FXtilde), post_reps)
@@ -78,6 +69,10 @@ function finite_groups(FXtilde, post_reps)
         X_post[:, g] = g2X(g, FXtilde)
     end
     return true, weights, X_post
+end
+
+function finite_groups(FXtilde, post_reps)
+    false, ones(post_reps) ./ post_reps, Matrix{Float64}(undef, length(FXtilde), post_reps)
 end
 
 """
@@ -178,7 +173,7 @@ function simulation_stochastic_parallel(reps, FX, n, T, policies, outcome_model;
     futures = Vector{Future}(undef, nwrkrs)
     reps_per_worker = div(reps, nwrkrs)
     rem_reps = reps % nwrkrs # remaining reps will be distributed among the first workers that receive the task
-    channel = RemoteChannel(() -> Channel{Tuple{Int,Int}}(nwrkrs*10))
+    channel = RemoteChannel(() -> Channel{Tuple{Int,Int}}(nwrkrs * 10))
     @async begin
         while true
             (id, i) = take!(channel)

@@ -74,7 +74,7 @@ end
 """
     BiasedCoinPolicyLinear <: PolicyLinear
     BiasedCoinPolicyLinear(n, m, theta0, Sigma0, sample_std, predictive, prognostic, labeling=vcat(falses(m),trues(n*m)); p=vcat(0.5, 0.5*ones(n-1)/(n-1)), weights=vcat(0.0,ones(length(prognostic))/length(prognostic),0.0), target_fraction=ones(n)/n)
-    BiasedCoinPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula,CovariatesIndependent}, labeling=vcat(falses(m),trues(n*m)); p=vcat(0.5, 0.5*ones(n-1)/(n-1)), weights=nothing, target_fraction=ones(n)/n)
+    BiasedCoinPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::CovariatesGenerator, labeling=vcat(falses(m),trues(n*m)); p=vcat(0.5, 0.5*ones(n-1)/(n-1)), weights=nothing, target_fraction=ones(n)/n)
 
 A policy that allocates treatments according to a biased coin design and implements
 using a linear model with a labeling.
@@ -109,7 +109,7 @@ function BiasedCoinPolicyLinear(n, m, theta0, Sigma0, sample_std, predictive, pr
     BiasedCoinPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), predictive, prognostic, p, weights, target_fraction)
 end
 
-function BiasedCoinPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula,CovariatesIndependent}, labeling=vcat(falses(m), trues(n * m)); p=vcat(0.5, 0.5 * ones(n - 1) / (n - 1)), weights=nothing, target_fraction=ones(n) / n)
+function BiasedCoinPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::CovariatesGenerator, labeling=vcat(falses(m), trues(n * m)); p=vcat(0.5, 0.5 * ones(n - 1) / (n - 1)), weights=nothing, target_fraction=ones(n) / n)
     length(FX) == m || throw(ArgumentError("length of FX must be equal to m"))
     predictive, prognostic = labeling2predprog(n, FX, labeling)
     if isnothing(weights)
@@ -137,7 +137,7 @@ end
 """
     RABC_OCBA_PolicyLinear <: PolicyLinear
     RABC_OCBA_PolicyLinear(n, m, theta0, Sigma0, sample_std, predictive, prognostic, labeling=vcat(falses(m),trues(n*m)); p=vcat(0.5, 0.5*ones(n-1)/(n-1)), weights=vcat(0.0,ones(length(prognostic))/length(prognostic),0.0))
-    RABC_OCBA_PolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula,CovariatesIndependent}, labeling=vcat(falses(m),trues(n*m)); p=vcat(0.5, 0.5*ones(n-1)/(n-1)), weights=nothing)
+    RABC_OCBA_PolicyLinear(n, m, theta0, Sigma0, sample_std, FX::CovariatesGenerator, labeling=vcat(falses(m),trues(n*m)); p=vcat(0.5, 0.5*ones(n-1)/(n-1)), weights=nothing)
 
 Reasponse-Adaptive Biased Coin (RABC) using OCBA for the target fraction.
 A policy that allocates treatments according to a response-adative biased coin design
@@ -175,7 +175,7 @@ function RABC_OCBA_PolicyLinear(n, m, theta0, Sigma0, sample_std, predictive, pr
     RABC_OCBA_PolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), predictive, prognostic, p, weights)
 end
 
-function RABC_OCBA_PolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula,CovariatesIndependent}, labeling=vcat(falses(m), trues(n * m)); p=vcat(0.5, 0.5 * ones(n - 1) / (n - 1)), weights=nothing)
+function RABC_OCBA_PolicyLinear(n, m, theta0, Sigma0, sample_std, FX::CovariatesGenerator, labeling=vcat(falses(m), trues(n * m)); p=vcat(0.5, 0.5 * ones(n - 1) / (n - 1)), weights=nothing)
     length(FX) == m || throw(ArgumentError("length of FX must be equal to m"))
     predictive, prognostic = labeling2predprog(n, FX, labeling)
     if isnothing(weights)

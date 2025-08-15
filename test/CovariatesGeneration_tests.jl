@@ -8,21 +8,40 @@ using Test
 @testset "CovariatesCopula and CovariatesIndependent" begin
     copula = GaussianCopula([1 0.0; 0.0 1])
     FX = CovariatesCopula([Categorical([1 / 3, 1 / 3, 1 / 3]), Normal(0, 1)], copula)
-    FXi = CovariatesIndependent([Categorical([1 / 3, 1 / 3, 1 / 3]), Normal(0, 1)])
-
     rng = Xoshiro(1234)
     X = rand(rng, FX)
     @test X[1] == 1.0
     @test sum(X[2:3]) == 1.0 || sum(X[2:3]) == 0.0
     @test all(X[2:3] .∈ Ref([0, 1]))
     @test X[4] < 10 && X[4] > -10 && X[4] != 0.0
-
+    
+    FXi = CovariatesIndependent([Categorical([1 / 3, 1 / 3, 1 / 3]), Normal(0, 1)])
     rng = Xoshiro(1234)
     Xi = rand(rng, FXi)
     @test Xi[1] == 1.0
     @test sum(Xi[2:3]) == 1.0 || sum(Xi[2:3]) == 0.0
     @test all(Xi[2:3] .∈ Ref([0, 1]))
     @test Xi[4] < 10 && Xi[4] > -10 && X[4] != 0.0
+
+    # Now with only finite marginals
+    FX = CovariatesCopula([Categorical([1 / 3, 1 / 3, 1 / 3]), Bernoulli(0.5)], copula)
+    @test typeof(FX) <: CovariatesCopulaFinite
+    rng = Xoshiro(1234)
+    X = rand(rng, FX)
+    @test X[1] == 1.0
+    @test sum(X[2:3]) == 1.0 || sum(X[2:3]) == 0.0
+    @test all(X[2:4] .∈ Ref([0, 1]))
+    
+    FXi = CovariatesIndependent([Categorical([1 / 3, 1 / 3, 1 / 3]), Bernoulli(0.5)])
+    @test typeof(FXi) <: CovariatesIndependentFinite
+    rng = Xoshiro(1234)
+    Xi = rand(rng, FXi)
+    @test Xi[1] == 1.0
+    @test sum(Xi[2:3]) == 1.0 || sum(Xi[2:3]) == 0.0
+    @test all(Xi[2:4] .∈ Ref([0, 1]))
+
+    @test_throws DomainError CovariatesIndependent([Poisson(1.0)])
+    @test_throws DomainError CovariatesCopula([Poisson(1.0)], copula)
 
     # CovariatesIndependent is slightly faster than CovariatesCopula
     # @benchmark rand($rng,$FX)
@@ -63,7 +82,7 @@ end
     FX = CovariatesIndependent([Categorical([1 / 3, 1 / 3, 1 / 3]), Categorical(ones(4) / 4)])
     @test covariates_partition(FX) == [[2, 3], [4, 5, 6]]
     FX = CovariatesIndependent([Categorical([1 / 3, 1 / 3, 1 / 3]), Categorical([1])])
-    @test covariates_partition(FX) == [[2, 3]]
+    @test covariates_partition(FX) == [[2, 3], []]
     FX = CovariatesIndependent([Categorical([1 / 3, 1 / 3, 1 / 3]), Categorical([1])], false)
     @test covariates_partition(FX) == [[1, 2, 3], [4]]
 end

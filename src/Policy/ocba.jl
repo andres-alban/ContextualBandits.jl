@@ -33,7 +33,7 @@ end
 """
     OCBAPolicyLinear <: PolicyLinear
     OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, predictive, labeling=vcat(falses(m),trues(n*m)))
-    OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula, CovariatesIndependent}, labeling=vcat(falses(m),trues(n*m)))
+    OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::CovariatesGenerator, labeling=vcat(falses(m),trues(n*m)))
 
 Allocate treatment using the OCBA algorithm and update based on the linear model with labeling to make an implementation.
 
@@ -58,7 +58,7 @@ function OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, predictive, labeling
     OCBAPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), predictive)
 end
 
-function OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::Union{CovariatesCopula,CovariatesIndependent}, labeling=vcat(falses(m), trues(n * m)))
+function OCBAPolicyLinear(n, m, theta0, Sigma0, sample_std, FX::CovariatesGenerator, labeling=vcat(falses(m), trues(n * m)))
     predictive, _ = labeling2predprog(n, FX, labeling)
     OCBAPolicyLinear(BayesLinearRegression(n, m, theta0, Sigma0, sample_std, labeling), predictive)
 end

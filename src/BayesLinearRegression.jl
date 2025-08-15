@@ -114,7 +114,7 @@ mutable struct BayesLinearRegressionDiscrete
     Sigma0::Matrix{Float64}
     sample_std::Float64
     labeling::BitVector
-    FX::Union{CovariatesIndependent,CovariatesCopula}
+    FX::CovariatesGeneratorFinite
     gn::Int
     p::Vector{Float64}
     theta_t::Vector{Float64}
